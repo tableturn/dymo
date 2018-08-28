@@ -1,0 +1,42 @@
+[
+  inputs: [
+    "mix.exs",
+    "{config,lib,priv,test}/**/*.{ex,exs}",
+    "mix.exs",
+    ".formatter.exs",
+    ".iex.exs"
+  ],
+  locals_without_parens: [
+    add: :*,
+    arg: :*,
+    belongs_to: :*,
+    can: :*,
+    config: :*,
+    create: :*,
+    create_directory: :*,
+    description: :*,
+    field: :*,
+    forward: :*,
+    get: :*,
+    has_many: :*,
+    import_types: :*,
+    interface: :*,
+    many_to_many: :*,
+    middleware: :*,
+    named: :*,
+    pipe_through: :*,
+    plug: :*,
+    render_error: :*,
+    reload: :*,
+    resolve: :*,
+    resolve_type: :*,
+    response: :*,
+    serialize: :*,
+    socket: :*,
+    store_named: :*,
+    trigger: :*,
+    types: :*,
+    whereis: :*,
+    whereis_name: :*
+  ]
+]
