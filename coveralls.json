@@ -2,6 +2,7 @@
   "skip_files": [
     "config",
     "priv",
+    "lib/mix",
     "test",
     "test/support"
   ]
