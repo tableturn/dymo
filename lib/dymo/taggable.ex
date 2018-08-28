@@ -1,6 +1,24 @@
 defmodule Dymo.Taggable do
   @moduledoc """
   Allows to easily make models taggable.
+
+  To use this module, you can simply leverage the `use` macro inside
+  your model module:
+
+  ```elixir
+  use Dymo.Taggable
+  ```
+
+  When doing so, the current module will be augmented by several functions:
+
+  - `set_labels/2`
+  - `add_labels/2`
+  - `remove_labels/2`
+  - `labels/0` and `labels/1`
+  - `labeled_with/1`
+
+  Doing so will require you to have a join table set up between the model and Dymo.Tag
+  as well as a `many_to_many` relationship on your model.
   """
 
   alias Dymo.Tagger
