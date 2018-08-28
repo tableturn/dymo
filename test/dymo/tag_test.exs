@@ -44,5 +44,5 @@ defmodule Dymo.TagTest do
   end
 
   defp label(_context),
-    do: {:ok, label: "#{Faker.Name.first_name()} #{:erlang.unique_integer()}"}
+    do: {:ok, label: "label #{:erlang.unique_integer()}"}
 end
