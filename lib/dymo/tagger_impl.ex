@@ -1,6 +1,6 @@
 defmodule Dymo.TaggerImpl do
   @moduledoc """
-  This tagger helps with tagging object using a backed ecto repo.
+  This tagger helps with tagging objects using a backed ecto repo.
   """
 
   use Ecto.Schema

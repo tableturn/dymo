@@ -19,10 +19,10 @@ pipeline:
     image: elixir:${ELIXIR_TAG}
     commands:
       - mix do local.rebar --force, local.hex --force
-      - MIX_ENV=test mix do deps.get, ecto.create, ecto.migrate, coveralls.json --umbrella
+      - MIX_ENV=test mix do deps.get, coveralls.json
     environment:
       - POSTGRES_HOST=database
-      - POSTGRES_DB=linky_test
+      - POSTGRES_DB=dymo_test
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
 
@@ -35,11 +35,6 @@ pipeline:
     commands:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all, dialyzer
-    environment:
-      - POSTGRES_HOST=database
-      - POSTGRES_DB=linky_test
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
 
   # Upload coverage reports, only for the latest elixir.
   codecov:
@@ -60,11 +55,11 @@ pipeline:
     mount: [/root/.mix, /root/.hex, ./deps, ./_build, ./.git]
     volumes:
       - /tmp/cache:/cache
-
+ 
 services:
   database:
     image: postgres:10.3
     environment:
-    - POSTGRES_DB=linky_test
+    - POSTGRES_DB=dymo_test
     - POSTGRES_USER=postgres
     - POSTGRES_PASSWORD=postgres

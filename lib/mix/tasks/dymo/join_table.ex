@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Dymo.JoinTable do
+  @moduledoc false
   @shortdoc "Generates Dymo join table between a model and Tags."
 
   use Mix.Task
@@ -6,7 +7,8 @@ defmodule Mix.Tasks.Dymo.JoinTable do
   alias Dymo.Tagger
   alias Mix.Tasks.Dymo.Utils
 
-  def run([]), do: raise("No model module name specified.")
+  def run([]),
+    do: raise("No model module name specified.")
 
   def run([model]) do
     if String.length(model) <= 0 do

@@ -1,4 +1,6 @@
 defmodule Dymo.Post do
+  @moduledoc false
+
   use Ecto.Schema
   use Dymo.Taggable
 
