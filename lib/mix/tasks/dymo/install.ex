@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Dymo.Install do
+  @moduledoc false
   @shortdoc "Generates Dymo migration file for the Tag model."
 
   use Mix.Task

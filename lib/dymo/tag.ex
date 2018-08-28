@@ -1,6 +1,6 @@
 defmodule Dymo.Tag do
   @moduledoc """
-  This module provides functionality dedicated to handling user data.
+  This module provides functionality dedicated to handling tag data.
   """
 
   use Ecto.Schema

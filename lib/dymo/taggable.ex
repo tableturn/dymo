@@ -8,8 +8,8 @@ defmodule Dymo.Taggable do
   defmacro __using__(opts) do
     impl = Keyword.get(opts, :implementation, Dymo.TaggerImpl)
 
-    join_table = Tagger.join_table(__CALLER__.module)
-    join_key = Tagger.join_key(__CALLER__.module)
+    join_table = Keyword.get(opts, :join_table, Tagger.join_table(__CALLER__.module))
+    join_key = Keyword.get(opts, :join_key, Tagger.join_key(__CALLER__.module))
 
     quote do
       alias Ecto.{Query, Schema}
