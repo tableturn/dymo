@@ -1,0 +1,13 @@
+/_build
+/cover
+/db
+/deps
+/doc
+/.vscode
+/.elixir_ls
+
+*.beam
+*.dump
+*.ez
+*.fetch
+*.log
