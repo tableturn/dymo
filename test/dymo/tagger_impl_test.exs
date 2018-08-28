@@ -2,6 +2,7 @@ defmodule Dymo.TaggerImplTest do
   use Dymo.DataCase, async: true
   alias Dymo.TaggerImpl
   alias Dymo.{Post, Repo}
+  doctest TaggerImpl, include: true
 
   @labels ~w(one two)
   @other_labels ~w(one three)

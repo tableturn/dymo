@@ -18,6 +18,21 @@ defmodule Dymo.TaggerImpl do
   @type join_table :: Tagger.join_table()
   @type join_key :: Tagger.join_key()
 
+  @doc """
+  Sets the labels associated with an instance of a model.
+
+  If any other labels are associated to the given model, they are
+  discarded if they are not part of the list of passed new labels.
+
+  ## Examples
+
+      iex> labels = ~w(one two)
+      iex> %{tags: tags} = %Dymo.Post{title: "Hey"}
+      ...>  |> Dymo.repo().insert!
+      ...>  |> TaggerImpl.set_labels(labels)
+      iex> Enum.map(tags, & &1.label)
+      ["one", "two"]
+  """
   @spec set_labels(Schema.t(), label() | labels()) :: Schema.t()
   def set_labels(%{tags: %NotLoaded{}} = struct, lbls),
     do:
@@ -31,6 +46,19 @@ defmodule Dymo.TaggerImpl do
       |> List.wrap()
       |> maintain_labels_tags(struct)
 
+  @doc """
+  Adds labels to a given instance of a model.
+
+  ## Examples
+
+      iex> labels = ~w(three four)
+      iex> %{tags: tags} = %Dymo.Post{title: "Hey"}
+      ...>  |> Dymo.repo().insert!
+      ...>  |> TaggerImpl.set_labels(labels)
+      ...>  |> TaggerImpl.add_labels("five")
+      iex> Enum.map(tags, & &1.label)
+      ["three", "four", "five"]
+  """
   @spec add_labels(Schema.t(), label() | labels()) :: Schema.t()
   def add_labels(%{tags: %NotLoaded{}} = struct, lbls),
     do:
@@ -45,6 +73,19 @@ defmodule Dymo.TaggerImpl do
       |> Kernel.++(List.wrap(lbls))
       |> maintain_labels_tags(struct)
 
+  @doc """
+  Removes labels from a given instance of a model.
+
+  ## Examples
+
+      iex> labels = ~w(six seven)
+      iex> %{tags: tags} = %Dymo.Post{title: "Hey"}
+      ...>  |> Dymo.repo().insert!
+      ...>  |> TaggerImpl.set_labels(labels)
+      ...>  |> TaggerImpl.remove_labels("six")
+      iex> Enum.map(tags, & &1.label)
+      ["seven"]
+  """
   @spec remove_labels(Schema.t(), label() | labels()) :: Schema.t()
   def remove_labels(%{tags: %NotLoaded{}} = struct, lbls),
     do:
@@ -59,6 +100,34 @@ defmodule Dymo.TaggerImpl do
       |> Kernel.--(List.wrap(lbls))
       |> maintain_labels_tags(struct)
 
+  @doc """
+  Removes labels from a given instance of a model.
+
+  ## Examples
+
+      iex> labels = ~w(eight nine)
+      iex> post = %Dymo.Post{title: "Hey"}
+      ...>  |> Dymo.repo().insert!
+      iex> TaggerImpl.set_labels(post, labels)
+      iex> Dymo.Post
+      ...>  |> TaggerImpl.query_labels()
+      ...>  |> Dymo.repo().all()
+      ...>  |> Enum.empty?
+      false
+      iex> "posts_tags"
+      ...>  |> TaggerImpl.query_labels()
+      ...>  |> Dymo.repo().all()
+      ...>  |> Enum.empty?
+      false
+      iex> post
+      ...>  |> TaggerImpl.query_labels()
+      ...>  |> Dymo.repo().all()
+      ["eight", "nine"]
+      iex> post
+      ...>  |> TaggerImpl.query_labels("posts_tags", :post_id)
+      ...>  |> Dymo.repo().all()
+      ["eight", "nine"]
+  """
   @spec query_labels(module() | String.t() | Schema.t()) :: Query.t()
   def query_labels(module) when is_atom(module),
     do:
@@ -86,6 +155,34 @@ defmodule Dymo.TaggerImpl do
       |> distinct([t, tg], t.label)
       |> select([t, tg], t.label)
 
+  @doc """
+  Queries models that are tagged with the given labels.
+
+  ## Examples
+
+      iex> labels = ~w(ten eleven)
+      iex> %{id: id} = %Dymo.Post{title: "Hey"}
+      ...>  |> Dymo.repo().insert!
+      ...>  |> TaggerImpl.set_labels(labels)
+      iex> id == Dymo.Post
+      ...>  |> TaggerImpl.query_labeled_with(labels)
+      ...>  |> Dymo.repo().all()
+      ...>  |> hd
+      ...>  |> Map.get(:id)
+      true
+      iex> id == Dymo.Post
+      ...>  |> TaggerImpl.query_labeled_with("ten")
+      ...>  |> Dymo.repo().all()
+      ...>  |> hd
+      ...>  |> Map.get(:id)
+      true
+      iex> id == Dymo.Post
+      ...>  |> TaggerImpl.query_labeled_with("one")
+      ...>  |> Dymo.repo().all()
+      ...>  |> hd
+      ...>  |> Map.get(:id)
+      false
+  """
   @spec query_labeled_with(module, label() | labels()) :: Query.t()
   def query_labeled_with(module, lbl_or_lbls),
     do:
