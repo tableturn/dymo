@@ -1,4 +1,4 @@
-defmodule Dymo.Repo.Migrations.CreatePosts do
+defmodule Repo.Migrations.CreatePosts do
   use Ecto.Migration
 
   def change do
