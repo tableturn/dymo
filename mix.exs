@@ -4,7 +4,7 @@ defmodule Kryptonite.MixProject do
   def project do
     [
       app: :dymo,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -39,10 +39,8 @@ defmodule Kryptonite.MixProject do
       # Dev only.
       {:credo, "~> 0.10", only: :dev},
       {:dialyxir, "~> 0.5", only: :dev},
-      {:mix_test_watch, "~> 0.8", only: :dev},
       {:ex_doc, "~> 0.19", only: :dev},
       # Test only.
-      {:faker, "~> 0.10", only: :test},
       {:excoveralls, "~> 0.8", only: :test},
       # Everything else.
       {:inflex, "~> 1.10.0"},
