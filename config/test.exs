@@ -11,3 +11,5 @@ config :dymo,
        database: System.get_env("POSTGRES_DB") || "dymo_test"
 
 config :dymo, :repo, Dymo.Repo
+
+config :logger, level: :warn

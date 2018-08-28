@@ -11,3 +11,5 @@ config :dymo,
        database: System.get_env("POSTGRES_DB") || "dymo_dev"
 
 config :dymo, :repo, Dymo.Repo
+
+config :logger, :console, format: "[$level] $message\n"
