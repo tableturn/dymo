@@ -11,19 +11,19 @@ defmodule Mix.Tasks.Dymo.Install do
     create_directory path
 
     path
-    |> Path.join("#{Utils.timestamp()}_create_tag.exs")
+    |> Path.join("#{Utils.timestamp()}_create_tags.exs")
     |> create_file("""
     defmodule Repo.Migrations.CreateTags do
       use Ecto.Migration
 
       def change do
-      create table(:tags) do
-        add :label, :string, null: false
+        create table(:tags) do
+          add :label, :string, null: false
 
-        timestamps()
-      end
+          timestamps()
+        end
 
-      create index(:tags, [:label], unique: true)
+        create index(:tags, [:label], unique: true)
       end
     end
     """)

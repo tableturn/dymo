@@ -36,7 +36,7 @@ Then, you can install the `Tag` migration in your application (Note that for umb
 ```bash
 $ mix dymo.install
 * creating priv/repo/migrations
-* creating priv/repo/migrations/20180828154957_create_tag.exs
+* creating priv/repo/migrations/20180828154957_create_tags.exs
 ```
 
 Once done, you should start and make a join table for the model(s) you want to be able to label. There is a mix task for this too!
