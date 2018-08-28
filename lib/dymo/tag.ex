@@ -22,6 +22,9 @@ defmodule Dymo.Tag do
     timestamps()
   end
 
+  @doc """
+  Makes a changeset suited to manipulate the `Dymo.Tag` model.
+  """
   @spec changeset(map()) :: Ecto.Changeset.t()
   def changeset(attrs),
     do:
@@ -32,7 +35,16 @@ defmodule Dymo.Tag do
 
   @doc """
   This function gets an existing tag using its label. If the tag doesn't
-  exit, it is atomically created.
+  exit, it is atomically created. It could be described as a "singleton"
+  helper.
+
+  ## Examples
+
+      iex> %{id: id1a} = Tag.find_or_create!("novel")
+      iex> [%{id: id2a}, %{id: id3a}] = Tag.find_or_create!(["article", "book"])
+      iex> [%{id: id1b}, %{id: id2b}, %{id: id3b}] = Tag.find_or_create!(["novel", "article", "book"])
+      iex> {id1a, id2a, id3a} == {id1b, id2b, id3b}
+      true
   """
   @spec find_or_create!(String.t() | [String.t()]) :: t
   def find_or_create!(labels) when is_list(labels),
