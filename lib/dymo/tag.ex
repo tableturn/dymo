@@ -1,20 +1,17 @@
 defmodule Dymo.Tag do
   @moduledoc """
   This module provides functionality dedicated to handling tag data.
+
+  It essentially aims at maintaining singleton labels in a `tags` table
+  and exposes helper functions to ease their creation.
   """
 
   use Ecto.Schema
   import Ecto.Changeset
 
   @me __MODULE__
-  @repo Dymo.repo()
 
-  @type id :: pos_integer
-
-  @typedoc """
-  The `Dymo.Tag.t()` schema defines simple tags identified by
-  a unique label.
-  """
+  @typedoc "Defines simple tags identified by a unique label."
   @type t :: %__MODULE__{}
   schema "tags" do
     # Regular fields.
@@ -55,7 +52,7 @@ defmodule Dymo.Tag do
 
   def find_or_create!(label) do
     @me
-    |> @repo.get_by(label: label)
+    |> Dymo.repo().get_by(label: label)
     |> case do
       nil -> upsert!(label)
       tag -> tag
@@ -66,9 +63,9 @@ defmodule Dymo.Tag do
   defp upsert!(label) do
     %{label: label}
     |> changeset()
-    |> @repo.insert!(on_conflict: :nothing)
+    |> Dymo.repo().insert!(on_conflict: :nothing)
     |> case do
-      %{id: nil} -> @repo.get_by!(@me, label: label)
+      %{id: nil} -> Dymo.repo().get_by!(@me, label: label)
       tag -> tag
     end
   end

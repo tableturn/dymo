@@ -11,8 +11,6 @@ defmodule Dymo.TaggerImpl do
 
   @behaviour Tagger
 
-  @repo Dymo.repo()
-
   @type label :: Tagger.label()
   @type labels :: Tagger.labels()
   @type join_table :: Tagger.join_table()
@@ -37,7 +35,7 @@ defmodule Dymo.TaggerImpl do
   def set_labels(%{tags: %NotLoaded{}} = struct, lbls),
     do:
       struct
-      |> @repo.preload(:tags)
+      |> Dymo.repo().preload(:tags)
       |> set_labels(lbls)
 
   def set_labels(%{id: _, tags: _} = struct, lbls),
@@ -63,7 +61,7 @@ defmodule Dymo.TaggerImpl do
   def add_labels(%{tags: %NotLoaded{}} = struct, lbls),
     do:
       struct
-      |> @repo.preload(:tags)
+      |> Dymo.repo().preload(:tags)
       |> add_labels(lbls)
 
   def add_labels(%{id: _, tags: _} = struct, lbls),
@@ -90,7 +88,7 @@ defmodule Dymo.TaggerImpl do
   def remove_labels(%{tags: %NotLoaded{}} = struct, lbls),
     do:
       struct
-      |> @repo.preload(:tags)
+      |> Dymo.repo().preload(:tags)
       |> remove_labels(lbls)
 
   def remove_labels(%{id: _, tags: _} = struct, lbls),
@@ -101,7 +99,8 @@ defmodule Dymo.TaggerImpl do
       |> maintain_labels_tags(struct)
 
   @doc """
-  Removes labels from a given instance of a model.
+  Retrieves labels associated with an target. The target
+  could be either a module or a schema.
 
   ## Examples
 
@@ -147,6 +146,11 @@ defmodule Dymo.TaggerImpl do
       struct
       |> query_labels(Tagger.join_table(struct), Tagger.join_key(struct))
 
+  @doc """
+  Retrieves labels associated with an target.
+
+  See `query_labels/1`
+  """
   @spec query_labels(Schema.t(), String.t(), atom) :: Ecto.Query.t()
   def query_labels(%{id: id, tags: _}, join_table, join_key),
     do:
@@ -176,12 +180,10 @@ defmodule Dymo.TaggerImpl do
       ...>  |> hd
       ...>  |> Map.get(:id)
       true
-      iex> id == Dymo.Post
-      ...>  |> TaggerImpl.query_labeled_with("one")
+      iex> Dymo.Post
+      ...>  |> TaggerImpl.query_labeled_with("noithing")
       ...>  |> Dymo.repo().all()
-      ...>  |> hd
-      ...>  |> Map.get(:id)
-      false
+      []
   """
   @spec query_labeled_with(module, label() | labels()) :: Query.t()
   def query_labeled_with(module, lbl_or_lbls),
@@ -207,7 +209,7 @@ defmodule Dymo.TaggerImpl do
   def labels(%{id: _, tags: _} = struct),
     do:
       struct
-      |> @repo.preload(:tags)
+      |> Dymo.repo().preload(:tags)
       |> Map.get(:tags)
       |> Enum.map(& &1.label)
 
@@ -217,5 +219,5 @@ defmodule Dymo.TaggerImpl do
       struct
       |> change
       |> put_assoc(:tags, Tag.find_or_create!(lbls))
-      |> @repo.update!()
+      |> Dymo.repo().update!()
 end
