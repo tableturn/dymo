@@ -17,8 +17,11 @@ defmodule Dymo.Taggable do
   - `labels/0` and `labels/1`
   - `labeled_with/1`
 
-  Doing so will require you to have a join table set up between the model and Dymo.Tag
+  Doing so will require you to have a join table set up between the model and `Dymo.Tag`
   as well as a `many_to_many` relationship on your model.
+
+  For more information about their usage and typings, have a look at the `Dymo.Tagger`
+  behaviour and the `Dymo.TaggerImpl` implementation.
   """
 
   alias Dymo.Tagger

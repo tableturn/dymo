@@ -1,6 +1,7 @@
 defmodule Dymo.TaggerTest do
   use ExUnit.Case, async: true
   alias Dymo.Tagger
+  doctest Tagger, include: true
 
   test ".join_table/1 infers naming convention correctly" do
     assert "people_tags" == Tagger.join_table(Person)

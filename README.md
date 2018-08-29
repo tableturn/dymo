@@ -4,8 +4,9 @@
 [![Coverage Report](https://codecov.io/gh/the-missing-link/dymo/branch/master/graph/badge.svg?token=xsuechvNxp)](https://codecov.io/gh/the-missing-link/dymo)
 [![Hex.pm](https://img.shields.io/hexpm/dt/dymo.svg)](https://hex.pm/packages/dymo)
 
-![Dymo Old School Embosser](https://i.ebayimg.com/00/s/ODQ3WDc2Ng==/z/5mwAAOSw1x1UNkFc/$_35.JPG?set_id=2)
-For all your labelling and tagging needs!
+![Dymo Embosser](https://i.ebayimg.com/00/s/ODQ3WDc2Ng==/z/5mwAAOSw1x1UNkFc/$_35.JPG?set_id=2)
+
+For all your labelling and tagging needs!™
 
 ## Motivations
 
@@ -54,6 +55,53 @@ You might want to add the following relationship to your MyApp.Post schema:
 ```
 
 If you follow the directives given by the tasks, you should then have a fully labellable Post model. Congratulations!
+
+## Using Dymo.Taggable
+
+When a module uses `Dymo.Taggable`, many shortcut functions are meta-programmed into it.
+
+It becomes easy to achieve labelling-related tasks. All the examples bellow assyme that a `Post` module calls `use Dymo.Taggable`.
+
+### Editing Labels
+
+To set the tags on an instance of a post:
+
+```elixir
+Post.set_labels(post, ~w(ten eleven))
+```
+
+Similarily, you can add / remove labels using `Post.add_labels/2` and `Post.remove_labels/2`.
+
+### Querying Labels
+
+To get the labels associated with a given post, you have several options.
+
+Using the association directly if you defined it:
+
+```elixir
+post
+  |> Repo.preload(:tags)
+  |> Map.get(:tags)
+  |> Enum.map(&(&1.label))
+# 
+```
+
+Using the helper function:
+
+```elixir
+post
+  |> Post.labels()
+```
+
+Note that the `Post.labels/1` also accepts a module directly as an input - in that case it would return all labels that were ever associated with posts.
+
+You can also query models that are tagged with specific labels by doing the following:
+
+```elixir
+Post.labelled_with(~w(ten eleven))
+```
+
+## Notes
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
