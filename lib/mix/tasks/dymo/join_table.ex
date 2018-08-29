@@ -16,19 +16,18 @@ defmodule Mix.Tasks.Dymo.JoinTable do
     end
 
     # Eg: Elixir.Dymo.Post.
-    module = ["Elixir", model] |> Enum.join(".") |> String.to_existing_atom()
     # Eg: "Post"
-    singular = module |> Module.split() |> List.last()
+    singular = Tagger.singularize(model)
     # Eg: "post"
     singular_downcase = String.downcase(singular)
     # Eg: Posts
-    plural = singular |> Inflex.pluralize()
+    plural = Inflex.pluralize(singular)
     # Eg: posts
-    plural_downcase = plural |> String.downcase()
+    plural_downcase = String.downcase(plural)
     # Eg: posts_tags.
-    table = Tagger.join_table(module)
+    table = Tagger.join_table(model)
     # Eg: post_id
-    key = Tagger.join_key(module)
+    key = Tagger.join_key(model)
 
     path = Path.relative_to("priv/repo/migrations", Mix.Project.app_path())
     create_directory path
