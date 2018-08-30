@@ -1,119 +1,125 @@
 defmodule Dymo.TaggerImplTest do
-  use Dymo.DataCase, async: true
+  use Dymo.DataCase, async: false
   alias Dymo.TaggerImpl
   alias Dymo.{Post, Repo}
-  doctest TaggerImpl, include: true
+  # doctest TaggerImpl, include: true
 
-  @labels ~w(one two)
-  @other_labels ~w(one three)
+  @labels1 ~w(t1 t2)
+  @labels2 ~w(t3 t4)
+  @labels3 ~w(t1 t3)
 
-  setup :create_labelled_post
+  setup :create_labelled_posts
 
-  test ".set_labels/2 overwrittes existing labels", %{post: post} do
-    TaggerImpl.set_labels(post, @other_labels)
+  test ".set_labels/2 overwrittes existing labels", %{posts: [p1, _]} do
+    TaggerImpl.set_labels(p1, @labels3)
 
-    assert @other_labels ==
-             post
+    assert @labels3 ==
+             p1
              |> reload
              |> TaggerImpl.labels()
   end
 
-  test ".add_labels/2 adds the extra labels", %{post: post} do
-    TaggerImpl.add_labels(post, @other_labels)
+  test ".add_labels/2 adds the extra labels", %{posts: [p1, p2]} do
+    TaggerImpl.add_labels(p1, @labels3)
 
-    assert Enum.uniq(@labels ++ @other_labels) ==
-             post
+    assert Enum.uniq(@labels1 ++ @labels3) ==
+             p1
+             |> reload
+             |> TaggerImpl.labels()
+
+    assert Enum.uniq(@labels2) ==
+             p2
              |> reload
              |> TaggerImpl.labels()
   end
 
-  test ".remove_labels/2 removes the specified", %{post: post} do
-    TaggerImpl.remove_labels(post, @other_labels)
+  test ".remove_labels/2 removes the specified", %{posts: [p1, p2]} do
+    TaggerImpl.remove_labels(p1, @labels3)
 
-    assert Enum.uniq(@labels -- @other_labels) ==
-             post
+    assert Enum.uniq(@labels1 -- @labels3) ==
+             p1
+             |> reload
+             |> TaggerImpl.labels()
+
+    assert Enum.uniq(@labels2) ==
+             p2
              |> reload
              |> TaggerImpl.labels()
   end
 
-  test ".labels/1 returns the tagged labels", %{post: post} do
-    assert @labels ==
-             post
+  test ".labels/1 returns the tagged labels", %{posts: [p1, p2]} do
+    assert @labels1 ==
+             p1
+             |> reload
+             |> TaggerImpl.labels()
+
+    assert @labels2 ==
+             p2
              |> reload
              |> TaggerImpl.labels()
   end
 
-  test ".query_labels/1a gets all tags" do
-    assert @labels ==
-             Post
-             |> TaggerImpl.query_labels()
+  test ".query_labels/2 gets tags from the given join table" do
+    assert @labels1 ++ @labels2 ==
+             "posts_tags"
+             |> TaggerImpl.query_labels(:post_id)
              |> Repo.all()
   end
 
-  test ".query_labels/1b gets tags from the given entity", %{post: post} do
-    assert @labels ==
-             post
-             |> reload
-             |> TaggerImpl.query_labels()
+  test ".query_labels/3 gets tags from the given entity only", %{posts: [p1, p2]} do
+    TaggerImpl.remove_labels(p1, "t1")
+
+    assert ["t2"] ==
+             p1
+             |> TaggerImpl.query_labels("posts_tags", :post_id)
              |> Repo.all()
-  end
 
-  test ".query_labels/3 gets tags from the given entity", %{post: post} do
-    TaggerImpl.remove_labels(post, "one")
-
-    assert ["two"] ==
-             post
+    assert @labels2 ==
+             p2
              |> TaggerImpl.query_labels("posts_tags", :post_id)
              |> Repo.all()
   end
 
-  describe ".query_labeled_with/2/4" do
-    test "gets entity by label", %{post: %{id: id}} do
+  describe ".query_labeled_with/4" do
+    test "gets entity by label", %{posts: [%{id: id}, _]} do
       assert [%{id: ^id}] =
                Post
-               |> TaggerImpl.query_labeled_with("one")
-               |> Repo.all()
-
-      assert [%{id: ^id}] =
-               Post
-               |> TaggerImpl.query_labeled_with("one", "posts_tags", :post_id)
+               |> TaggerImpl.query_labeled_with("t1", "posts_tags", :post_id)
                |> Repo.all()
     end
 
-    test "matches all tags", %{post: %{id: id}} do
-      assert [%{id: ^id}] =
+    test "matches all tags", %{posts: [%{id: id1}, %{id: id2}]} do
+      assert [%{id: ^id1}] =
                Post
-               |> TaggerImpl.query_labeled_with(@labels)
+               |> TaggerImpl.query_labeled_with(@labels1, "posts_tags", :post_id)
                |> Repo.all()
 
-      assert [%{id: ^id}] =
+      assert [%{id: ^id2}] =
                Post
-               |> TaggerImpl.query_labeled_with(@labels, "posts_tags", :post_id)
+               |> TaggerImpl.query_labeled_with(@labels2, "posts_tags", :post_id)
                |> Repo.all()
     end
 
     test "doesn't match if at least one tag differs" do
       assert [] ==
                Post
-               |> TaggerImpl.query_labeled_with(@other_labels)
-               |> Repo.all()
-
-      assert [] ==
-               Post
-               |> TaggerImpl.query_labeled_with(@other_labels, "posts_tags", :post_id)
+               |> TaggerImpl.query_labeled_with(@labels3, "posts_tags", :post_id)
                |> Repo.all()
     end
   end
 
-  defp create_labelled_post(_) do
-    post =
-      %Post{}
-      |> Post.changeset(%{title: "Hello #{:erlang.unique_integer()}!", body: "Bodybuilder."})
-      |> Repo.insert!()
-      |> TaggerImpl.set_labels(@labels)
-      |> reload
+  defp create_labelled_posts(_) do
+    posts =
+      [@labels1, @labels2]
+      |> Enum.map(
+        &(%Post{}
+          |> Post.changeset(%{title: "Hello #{:erlang.unique_integer()}!", body: "Bodybuilder."})
+          |> Repo.insert!()
+          |> TaggerImpl.set_labels(&1)
+          |> reload)
+      )
 
-    {:ok, post: post}
+    {:ok, posts: posts}
   end
 
   defp reload(%{id: id}),

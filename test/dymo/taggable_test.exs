@@ -8,9 +8,8 @@ defmodule Dymo.TaggableTest do
     def set_labels(s, lls), do: {s, lls}
     def add_labels(s, lls), do: {s, lls}
     def remove_labels(s, lls), do: {s, lls}
-    def query_labels(m_or_s), do: m_or_s
+    def query_labels(jt, jk), do: {jt, jk}
     def query_labels(s, jt, jk), do: {s, jt, jk}
-    def query_labeled_with(m_or_s, lls), do: {m_or_s, lls}
     def query_labeled_with(m, lls, jt, jk), do: {m, lls, jt, jk}
   end
 
@@ -56,7 +55,7 @@ defmodule Dymo.TaggableTest do
     end
 
     test ".labels/0" do
-      assert @join_table == Dummy.labels()
+      assert {"dummies_tags", :dummy_id} == Dummy.labels()
     end
 
     test ".labels/1", %{taggable: taggable} do

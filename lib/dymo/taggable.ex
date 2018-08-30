@@ -50,11 +50,20 @@ defmodule Dymo.Taggable do
 
       @spec labels :: Query.t()
       def labels(),
-        do: unquote(impl).query_labels(unquote(join_table))
+        do:
+          unquote(impl).query_labels(
+            unquote(join_table),
+            unquote(join_key)
+          )
 
       @spec labels(Schema.t()) :: Query.t()
       def labels(%{tags: _} = taggable),
-        do: unquote(impl).query_labels(taggable, unquote(join_table), unquote(join_key))
+        do:
+          unquote(impl).query_labels(
+            taggable,
+            unquote(join_table),
+            unquote(join_key)
+          )
 
       @spec labeled_with(Tagger.label() | Tagger.labels()) :: Query.t()
       def labeled_with(label_or_labels),

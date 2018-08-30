@@ -107,16 +107,10 @@ defmodule Dymo.TaggerImpl do
       iex> labels = ~w(eight nine)
       iex> post = %Dymo.Post{title: "Hey"}
       ...>  |> Dymo.repo().insert!
-      iex> TaggerImpl.set_labels(post, labels)
-      iex> Dymo.Post
-      ...>  |> TaggerImpl.query_labels()
-      ...>  |> Dymo.repo().all()
-      ...>  |> Enum.empty?
-      false
+      ...>  |> TaggerImpl.set_labels(labels)
       iex> "posts_tags"
-      ...>  |> TaggerImpl.query_labels()
+      ...>  |> TaggerImpl.query_labels(:post_id)
       ...>  |> Dymo.repo().all()
-      ...>  |> Enum.empty?
       false
       iex> post
       ...>  |> TaggerImpl.query_labels()
@@ -127,35 +121,26 @@ defmodule Dymo.TaggerImpl do
       ...>  |> Dymo.repo().all()
       ["eight", "nine"]
   """
-  @spec query_labels(module() | String.t() | Schema.t()) :: Query.t()
-  def query_labels(module) when is_atom(module),
-    do:
-      module
-      |> Tagger.join_table()
-      |> query_labels()
-
-  def query_labels(join_table) when is_binary(join_table),
+  @spec query_labels(join_table, join_key) :: Query.t()
+  def query_labels(jt, jk) when is_binary(jt) and is_atom(jk),
     do:
       Tag
-      |> join(:inner, [t], tg in ^join_table, t.id == tg.tag_id)
-      |> distinct([t, tg], t.label)
+      |> join(:left, [t], tg in ^jt, t.id == tg.tag_id)
+      |> distinct([t, tg], tg.tag_id)
+      |> where([t, tg], not is_nil(field(tg, ^jk)))
+      |> order_by([t, tg], asc: t.label)
       |> select([t, tg], t.label)
-
-  def query_labels(%{id: _, tags: _} = struct),
-    do:
-      struct
-      |> query_labels(Tagger.join_table(struct), Tagger.join_key(struct))
 
   @doc """
   Retrieves labels associated with an target.
 
   See `query_labels/1`
   """
-  @spec query_labels(Schema.t(), String.t(), atom) :: Ecto.Query.t()
-  def query_labels(%{id: id, tags: _}, join_table, join_key),
+  @spec query_labels(Schema.t(), join_table, join_key) :: Ecto.Query.t()
+  def query_labels(%{id: id, tags: _}, jt, jk),
     do:
       Tag
-      |> join(:inner, [t], tg in ^join_table, t.id == tg.tag_id and field(tg, ^join_key) == ^id)
+      |> join(:inner, [t], tg in ^jt, t.id == tg.tag_id and field(tg, ^jk) == ^id)
       |> distinct([t, tg], t.label)
       |> select([t, tg], t.label)
 
@@ -169,39 +154,27 @@ defmodule Dymo.TaggerImpl do
       ...>  |> Dymo.repo().insert!
       ...>  |> TaggerImpl.set_labels(labels)
       iex> id == Dymo.Post
-      ...>  |> TaggerImpl.query_labeled_with(labels)
-      ...>  |> Dymo.repo().all()
-      ...>  |> hd
-      ...>  |> Map.get(:id)
-      true
-      iex> id == Dymo.Post
-      ...>  |> TaggerImpl.query_labeled_with("ten")
+      ...>  |> TaggerImpl.query_labeled_with("ten", "posts_tags", :post_id)
       ...>  |> Dymo.repo().all()
       ...>  |> hd
       ...>  |> Map.get(:id)
       true
       iex> Dymo.Post
-      ...>  |> TaggerImpl.query_labeled_with("noithing")
+      ...>  |> TaggerImpl.query_labeled_with("nothing", "posts_tags", :post_id)
       ...>  |> Dymo.repo().all()
       []
   """
-  @spec query_labeled_with(module, label() | labels()) :: Query.t()
-  def query_labeled_with(module, lbl_or_lbls),
-    do:
-      module
-      |> query_labeled_with(lbl_or_lbls, Tagger.join_table(module), Tagger.join_key(module))
-
   @spec query_labeled_with(module, label() | labels(), join_table(), join_key()) :: Query.t()
-  def query_labeled_with(module, lbl_or_lbls, join_table, join_key) do
+  def query_labeled_with(module, lbl_or_lbls, jt, jk) when is_binary(jt) and is_atom(jk) do
     lbls = List.wrap(lbl_or_lbls)
     lbls_length = length(lbls)
 
     module
-    |> join(:inner, [m], tg in ^join_table, m.id == field(tg, ^join_key))
+    |> join(:inner, [m], tg in ^jt, m.id == field(tg, ^jk))
     |> join(:inner, [m, tg], t in Tag, t.id == tg.tag_id)
     |> where([m, tg, t], t.label in ^lbls)
     |> group_by([m, tg, t], m.id)
-    |> having([m, tg, t], count(field(tg, ^join_key)) == ^lbls_length)
+    |> having([m, tg, t], count(field(tg, ^jk)) == ^lbls_length)
     |> order_by([m, tg, t], asc: m.inserted_at)
   end
 

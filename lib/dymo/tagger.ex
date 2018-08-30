@@ -47,7 +47,7 @@ defmodule Dymo.Tagger do
 
   See `Dymo.TaggerImpl.query_labels/1`.
   """
-  @callback query_labels(module | String.t() | Schema.t()) :: Query.t()
+  @callback query_labels(join_table, join_key) :: Query.t()
 
   @doc """
   Retrieves labels associated with an target.
@@ -55,13 +55,6 @@ defmodule Dymo.Tagger do
   See `Dymo.TaggerImpl.query_labels/3`.
   """
   @callback query_labels(Schema.t(), join_table, join_key) :: Query.t()
-
-  @doc """
-  Queries models that are tagged with the given labels.
-
-  See `Dymo.query_labeled_with.query_labels/2`.
-  """
-  @callback query_labeled_with(module, label_or_labels) :: Query.t()
 
   @doc """
   Queries models that are tagged with the given labels.
