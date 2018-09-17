@@ -1,4 +1,4 @@
-defmodule Kryptonite.MixProject do
+defmodule Dymo.MixProject do
   use Mix.Project
 
   def project do
@@ -10,8 +10,8 @@ defmodule Kryptonite.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: "Dymo",
-      source_url: "https://github.com/the-missing-link/kryptonite",
-      homepage_url: "https://github.com/the-missing-link/kryptonite",
+      source_url: "https://github.com/the-missing-link/dymo",
+      homepage_url: "https://github.com/the-missing-link/dymo",
       dialyzer: [plt_add_deps: :project, plt_add_apps: [:public_key]],
       docs: [extras: ~w(README.md)],
       test_coverage: [tool: ExCoveralls],

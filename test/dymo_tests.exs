@@ -1,4 +1,4 @@
-defmodule KryptoniteTest do
+defmodule DymoTest do
   use ExUnit.Case, async: true
 
   test ".repo/0 returns the configured repository" do
