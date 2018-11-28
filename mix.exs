@@ -10,8 +10,8 @@ defmodule Dymo.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       name: "Dymo",
-      source_url: "https://github.com/the-missing-link/dymo",
-      homepage_url: "https://github.com/the-missing-link/dymo",
+      source_url: "https://github.com/tableturn/dymo",
+      homepage_url: "https://github.com/tableturn/dymo",
       dialyzer: [plt_add_deps: :project, plt_add_apps: [:public_key]],
       docs: [extras: ~w(README.md)],
       test_coverage: [tool: ExCoveralls],
@@ -58,7 +58,7 @@ defmodule Dymo.MixProject do
       files: ["lib", "mix.exs", "README*"],
       maintainers: ["Pierre Martin"],
       licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/the-missing-link/dymo"}
+      links: %{"GitHub" => "https://github.com/tableturn/dymo"}
     ]
   end
 end

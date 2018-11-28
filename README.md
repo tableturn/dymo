@@ -1,7 +1,7 @@
 # Dymo
 
-[![Build Status](https://ci.emage.run/api/badges/the-missing-link/dymo/status.svg)](https://ci.emage.run/the-missing-link/dymo)
-[![Coverage Report](https://codecov.io/gh/the-missing-link/dymo/branch/master/graph/badge.svg?token=xsuechvNxp)](https://codecov.io/gh/the-missing-link/dymo)
+[![Build Status](https://ci.linky.one/api/badges/tableturn/dymo/status.svg)](https://ci.emage.run/tableturn/dymo)
+[![Coverage Report](https://codecov.io/gh/tableturn/dymo/branch/master/graph/badge.svg)](https://codecov.io/gh/tableturn/dymo)
 [![Hex.pm](https://img.shields.io/hexpm/dt/dymo.svg)](https://hex.pm/packages/dymo)
 
 ![Dymo Embosser](https://i.ebayimg.com/00/s/ODQ3WDc2Ng==/z/5mwAAOSw1x1UNkFc/$_35.JPG?set_id=2)
