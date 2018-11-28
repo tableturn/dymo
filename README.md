@@ -1,6 +1,6 @@
 # Dymo
 
-[![Build Status](https://ci.linky.one/api/badges/tableturn/dymo/status.svg)](https://ci.emage.run/tableturn/dymo)
+[![Build Status](https://ci.linky.one/api/badges/tableturn/dymo/status.svg)](https://ci.linky.one/tableturn/dymo)
 [![Coverage Report](https://codecov.io/gh/tableturn/dymo/branch/master/graph/badge.svg)](https://codecov.io/gh/tableturn/dymo)
 [![Hex.pm](https://img.shields.io/hexpm/dt/dymo.svg)](https://hex.pm/packages/dymo)
 
