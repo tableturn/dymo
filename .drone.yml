@@ -36,6 +36,18 @@ pipeline:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all, dialyzer
 
+  slack-notify:
+    when:
+      status: [success, failure]
+    image: plugins/slack
+    secrets: [slack_webhook]
+    channel: ci
+    username: Drone
+    template: >
+      [{{repo.name}}:{{build.branch}}]
+      <{{build.link}}|Build {{truncate build.commit 8}}> by {{build.author}}
+      was a {{build.status}}.
+
   # Upload coverage reports, only for the latest elixir.
   codecov:
     when:
@@ -49,6 +61,8 @@ pipeline:
 
   # Store cache every time a build succeeds.
   rebuild-cache:
+    when:
+      status: [success, failure]
     image: drillster/drone-volume-cache
     rebuild: true
     cache_key: [DRONE_REPO_OWNER, DRONE_REPO_NAME, ELIXIR_TAG]
