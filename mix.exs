@@ -43,10 +43,13 @@ defmodule Dymo.MixProject do
       # Test only.
       {:excoveralls, "~> 0.8", only: :test},
       # Everything else.
-      {:inflex, "~> 1.10.0"},
-      {:ecto_sql, "~> 3.0"}
-    ]
+      {:inflex, "~> 1.10.0"}
+    ] ++ deps(Mix.env())
   end
+
+  defp deps(env) when env in [:dev, :test], do: [{:ecto_sql, "~> 3.0"}]
+
+  defp deps(_), do: [{:ecto, "~> 3.0"}]
 
   defp cli_env_for(env, tasks) do
     Enum.reduce(tasks, [], &Keyword.put(&2, :"#{&1}", env))
