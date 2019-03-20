@@ -64,6 +64,41 @@ defmodule Dymo.Tagger do
   @callback query_labeled_with(module, label_or_labels, join_table, join_key) :: Query.t()
 
   @doc """
+  Use this module to implements alternative `Ecto.Tagger`
+
+  By default, all functions are delegated to `Ecto.Tagger` but can be overriden
+  """
+  defmacro __using__(_opts) do
+    quote do
+      @behaviour Dymo.Tagger
+
+      import Ecto.Query
+
+      alias Dymo.TaggerImpl
+
+      defdelegate set_labels(struct, label_or_labels), to: TaggerImpl
+
+      defdelegate add_labels(struct, label_or_labels), to: TaggerImpl
+
+      defdelegate remove_labels(struct, label_or_labels), to: TaggerImpl
+
+      defdelegate query_labels(join_table, join_key), to: TaggerImpl
+
+      defdelegate query_labels(struct, join_table, join_key), to: TaggerImpl
+
+      defdelegate query_labeled_with(module, label_or_labels, join_table, join_key),
+        to: TaggerImpl
+
+      defoverridable set_labels: 2,
+                     add_labels: 2,
+                     remove_labels: 2,
+                     query_labels: 2,
+                     query_labels: 3,
+                     query_labeled_with: 4
+    end
+  end
+
+  @doc """
   A helper function that generates the join table name to be used
   for a given schema or model.
 
