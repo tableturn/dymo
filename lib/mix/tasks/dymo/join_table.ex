@@ -19,11 +19,11 @@ defmodule Mix.Tasks.Dymo.JoinTable do
     # Eg: "Post"
     singular = Tagger.singularize(model)
     # Eg: "post"
-    singular_downcase = String.downcase(singular)
+    singular_downcase = Macro.underscore(singular)
     # Eg: Posts
     plural = Inflex.pluralize(singular)
     # Eg: posts
-    plural_downcase = String.downcase(plural)
+    plural_downcase = Macro.underscore(plural)
     # Eg: posts_tags.
     table = Tagger.join_table(model)
     # Eg: post_id
