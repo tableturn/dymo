@@ -21,16 +21,17 @@ steps:
       - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all
 
   - name: slack-notify
-    when:
-      status: [success, failure]
     image: plugins/slack
-    secrets: [slack_webhook]
+    webhook:
+      from_secret: slack_webhook
     channel: ci
     username: Drone
     template: >
       [{{repo.name}}:{{build.branch}}]
       <{{build.link}}|Build {{truncate build.commit 8}}> by {{build.author}}
       was a {{build.status}}.
+    when:
+      status: [success, failure]
 
   # Upload coverage reports, only for the latest elixir.
   - name: codecov
