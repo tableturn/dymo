@@ -1,12 +1,6 @@
-matrix:
-  ELIXIR_TAG:
-    - 1.5
-    - 1.6
-    - 1.7
-
 steps:
   - name: build
-    image: elixir:${ELIXIR_TAG}
+    image: elixir:1.7
     commands:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=test mix do deps.get, coveralls.json
@@ -18,10 +12,7 @@ steps:
 
   # Check code formatting, linting and dialyze it using latest elixir.
   - name: checks
-    when:
-      matrix:
-        ELIXIR_TAG: 1.7
-    image: elixir:${ELIXIR_TAG}
+    image: elixir:1.7
     commands:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all
@@ -43,8 +34,6 @@ steps:
   - name: codecov
     when:
       status: [success]
-      matrix:
-        ELIXIR_TAG: 1.7
     image: robertstettner/drone-codecov
     secrets: [codecov_token]
     files:
