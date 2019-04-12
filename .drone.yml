@@ -34,14 +34,14 @@ steps:
     when:
       status: [success, failure]
 
-  # Upload coverage reports, only for the latest elixir.
-  - name: codecov
-    when:
-      status: [success]
-    image: robertstettner/drone-codecov
-    secrets: [codecov_token]
-    files:
-      - cover/excoveralls.json
+  # # Upload coverage reports, only for the latest elixir.
+  # - name: codecov
+  #   when:
+  #     status: [success]
+  #   image: robertstettner/drone-codecov
+  #   secrets: [codecov_token]
+  #   files:
+  #     - cover/excoveralls.json
 
 services:
   - name: database
