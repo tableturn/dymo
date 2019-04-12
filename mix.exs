@@ -4,7 +4,7 @@ defmodule Dymo.MixProject do
   def project do
     [
       app: :dymo,
-      version: "0.1.5",
+      version: "0.2.0",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -59,7 +59,7 @@ defmodule Dymo.MixProject do
     [
       name: "dymo",
       files: ["lib", "mix.exs", "README*"],
-      maintainers: ["Pierre Martin"],
+      maintainers: ["Pierre Martin", "Jean Parpaillon"],
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => "https://github.com/tableturn/dymo"}
     ]

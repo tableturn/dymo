@@ -83,7 +83,7 @@ post
   |> Repo.preload(:tags)
   |> Map.get(:tags)
   |> Enum.map(&(&1.label))
-# 
+#
 ```
 
 Using the helper function:
@@ -106,3 +106,13 @@ Post.labelled_with(~w(ten eleven))
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/dymo](https://hexdocs.pm/dymo).
+
+## Changes
+
+### 0.2.0
+
+* Add compatiblity with Ecto 3.x
+
+### 0.1.x
+
+* Compatible with Ecto 2.x
