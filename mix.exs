@@ -35,7 +35,7 @@ defmodule Dymo.MixProject do
   defp deps do
     [
       # Dev and Test only.
-      {:postgrex, "~> 0.13", only: [:dev, :test]},
+      {:postgrex, "~> 0.14", only: [:dev, :test]},
       # Dev only.
       {:credo, "~> 0.10", only: :dev},
       {:dialyxir, "~> 0.5", only: :dev},
@@ -43,10 +43,13 @@ defmodule Dymo.MixProject do
       # Test only.
       {:excoveralls, "~> 0.8", only: :test},
       # Everything else.
-      {:inflex, "~> 1.10.0"},
-      {:ecto, "~> 2.2"}
-    ]
+      {:inflex, "~> 1.10.0"}
+    ] ++ deps(Mix.env())
   end
+
+  defp deps(env) when env in [:dev, :test], do: [{:ecto_sql, "~> 3.0"}]
+
+  defp deps(_), do: [{:ecto, "~> 3.0"}]
 
   defp cli_env_for(env, tasks) do
     Enum.reduce(tasks, [], &Keyword.put(&2, :"#{&1}", env))

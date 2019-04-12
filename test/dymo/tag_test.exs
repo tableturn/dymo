@@ -24,7 +24,7 @@ defmodule Dymo.TagTest do
         |> Repo.insert()
 
       refute valid
-      assert errors[:label] == {"has already been taken", []}
+      assert match?({"has already been taken", _}, errors[:label])
     end
   end
 

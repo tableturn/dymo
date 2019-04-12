@@ -125,7 +125,7 @@ defmodule Dymo.TaggerImpl do
   def query_labels(jt, jk) when is_binary(jt) and is_atom(jk),
     do:
       Tag
-      |> join(:left, [t], tg in ^jt, t.id == tg.tag_id)
+      |> join(:left, [t], tg in ^jt, on: t.id == tg.tag_id)
       |> distinct([t, tg], tg.tag_id)
       |> where([t, tg], not is_nil(field(tg, ^jk)))
       |> order_by([t, tg], asc: t.label)
@@ -140,7 +140,7 @@ defmodule Dymo.TaggerImpl do
   def query_labels(%{id: id, tags: _}, jt, jk),
     do:
       Tag
-      |> join(:inner, [t], tg in ^jt, t.id == tg.tag_id and field(tg, ^jk) == ^id)
+      |> join(:inner, [t], tg in ^jt, on: t.id == tg.tag_id and field(tg, ^jk) == ^id)
       |> distinct([t, tg], t.label)
       |> select([t, tg], t.label)
 
@@ -170,8 +170,8 @@ defmodule Dymo.TaggerImpl do
     lbls_length = length(lbls)
 
     module
-    |> join(:inner, [m], tg in ^jt, m.id == field(tg, ^jk))
-    |> join(:inner, [m, tg], t in Tag, t.id == tg.tag_id)
+    |> join(:inner, [m], tg in ^jt, on: m.id == field(tg, ^jk))
+    |> join(:inner, [m, tg], t in Tag, on: t.id == tg.tag_id)
     |> where([m, tg, t], t.label in ^lbls)
     |> group_by([m, tg, t], m.id)
     |> having([m, tg, t], count(field(tg, ^jk)) == ^lbls_length)
