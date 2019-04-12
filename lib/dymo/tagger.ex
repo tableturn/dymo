@@ -153,6 +153,6 @@ defmodule Dymo.Tagger do
     end
     |> String.split(".")
     |> List.last()
-    |> String.downcase()
+    |> Macro.underscore()
   end
 end
