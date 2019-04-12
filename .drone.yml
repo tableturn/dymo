@@ -5,10 +5,10 @@ steps:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=test mix do deps.get, coveralls.json
     environment:
-      - POSTGRES_HOST=database
-      - POSTGRES_DB=dymo_test
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      POSTGRES_HOST: database
+      POSTGRES_DB: dymo_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
 
   # Check code formatting, linting and dialyze it using latest elixir.
   - name: checks
@@ -16,7 +16,6 @@ steps:
     commands:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all
-      # - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all, dialyzer
 
   - name: slack-notify
     when:
@@ -43,6 +42,6 @@ services:
   - name: database
     image: postgres:10.6
     environment:
-    - POSTGRES_DB=dymo_test
-    - POSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=postgres
+      POSTGRES_DB: dymo_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
