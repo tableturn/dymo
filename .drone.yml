@@ -22,14 +22,15 @@ steps:
 
   - name: slack-notify
     image: plugins/slack
-    webhook:
-      from_secret: slack_webhook
-    channel: ci
-    username: Drone
-    template: >
-      [{{repo.name}}:{{build.branch}}]
-      <{{build.link}}|Build {{truncate build.commit 8}}> by {{build.author}}
-      was a {{build.status}}.
+    settings:
+      webhook:
+        from_secret: slack_webhook
+      channel: ci
+      username: Drone
+      template: >
+        [{{repo.name}}:{{build.branch}}]
+        <{{build.link}}|Build {{truncate build.commit 8}}> by {{build.author}}
+        was a {{build.status}}.
     when:
       status: [success, failure]
 
