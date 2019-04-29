@@ -60,7 +60,7 @@ defmodule Dymo.Tag do
   end
 
   @spec upsert!(String.t()) :: t
-  defp upsert!(label) do
+  def upsert!(label) do
     %{label: label}
     |> changeset()
     |> Dymo.repo().insert!(on_conflict: :nothing)
