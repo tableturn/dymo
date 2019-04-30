@@ -1,16 +1,48 @@
 defmodule Dymo.TagTest do
   use Dymo.DataCase, async: true
+
   alias Dymo.Repo
   alias Dymo.Tag
+  alias Ecto.Changeset
+
   doctest Tag, import: true
 
   setup :label
 
   describe ".changeset/1" do
-    test "casts the label attribute", %{label: label} do
-      %{changes: changes} = Tag.changeset(%{label: label})
+    test "casts w/o namespace", %{label: label} do
+      cs =
+        %{label: label}
+        |> Tag.changeset()
 
-      assert label == changes[:label]
+      assert label == Changeset.get_field(cs, :label)
+      assert [] == Changeset.get_field(cs, :ns)
+    end
+
+    test "casts with namespace", %{label: label} do
+      cs =
+        %{label: label, ns: nil}
+        |> Tag.changeset()
+
+      assert [] == Changeset.get_field(cs, :ns)
+
+      cs =
+        %{label: label, ns: :ns1}
+        |> Tag.changeset()
+
+      assert ["ns1"] == Changeset.get_field(cs, :ns)
+
+      cs =
+        %{label: label, ns: [:ns1]}
+        |> Tag.changeset()
+
+      assert ["ns1"] == Changeset.get_field(cs, :ns)
+
+      cs =
+        %{label: label, ns: [:ns1, :ns2]}
+        |> Tag.changeset()
+
+      assert ["ns1", "ns2"] == Changeset.get_field(cs, :ns)
     end
 
     test "enforces label unicity", %{label: label} do

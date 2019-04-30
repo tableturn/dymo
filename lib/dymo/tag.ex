@@ -13,25 +13,41 @@ defmodule Dymo.Tag do
 
   @typedoc "Defines simple tags identified by a unique label."
   @type t :: %__MODULE__{}
+
   @typedoc "Defines a namespace for tag"
   @type ns :: nil | atom | [atom]
 
+  @typedoc "Defines attributes for building this model's changeset"
+  @type attrs :: %{required(:label) => String.t(), optional(:ns) => ns}
+
   schema "tags" do
     # Regular fields.
-    field(:label, :string)
+    field :label, :string
+    field :ns, {:array, :string}, default: []
     timestamps()
   end
 
   @doc """
   Makes a changeset suited to manipulate the `Dymo.Tag` model.
   """
-  @spec changeset(map()) :: Ecto.Changeset.t()
-  def changeset(attrs),
-    do:
-      %@me{}
-      |> cast(attrs, [:label])
-      |> validate_required([:label])
-      |> unique_constraint(:label)
+  @spec changeset(attrs()) :: Ecto.Changeset.t()
+  def changeset(attrs) do
+    ns =
+      attrs
+      |> Map.get(:ns, nil)
+      |> case do
+        nil -> []
+        ns -> List.wrap(ns)
+      end
+      |> Enum.map(&"#{&1}")
+
+    attrs = Map.put(attrs, :ns, ns)
+
+    %@me{}
+    |> cast(attrs, [:label, :ns])
+    |> validate_required([:label])
+    |> unique_constraint(:label)
+  end
 
   @doc """
   This function gets an existing tag using its label. If the tag doesn't
