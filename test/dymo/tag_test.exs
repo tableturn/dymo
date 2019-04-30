@@ -42,7 +42,7 @@ defmodule Dymo.TagTest do
         %{label: label, ns: [:ns1, :ns2]}
         |> Tag.changeset()
 
-      assert [:ns1, :ns2] == Changeset.get_field(cs, :ns)
+      assert [] == Changeset.get_field(cs, :ns)
     end
 
     test "enforces label unicity", %{label: label} do
@@ -90,6 +90,16 @@ defmodule Dymo.TagTest do
     test "inserts the record when it doesn't exist", %{label: label} do
       tag = Tag.find_or_create!(label)
       assert %Tag{} = tag
+      assert tag.id
+      assert label == tag.label
+    end
+
+    test "inserts the record when it doesn't exist, w/ namespaces", %{label: label} do
+      ns = :"#{:erlang.unique_integer()}"
+      tag = Tag.find_or_create!({ns, label})
+
+      assert match?(%Tag{label: ^label}, tag)
+
       assert tag.id
       assert label == tag.label
     end
