@@ -6,6 +6,7 @@ defmodule Dymo.Repo.Migrations.AddTagTableNsColumn do
       add :ns, {:array, :string}
     end
 
-    create index(:tags, [:ns])
+    drop index(:tags, [:label])
+    create index(:tags, [:label, :ns], unique: true, name: :tags_unique)
   end
 end

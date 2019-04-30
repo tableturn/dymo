@@ -58,6 +58,32 @@ defmodule Dymo.TagTest do
       refute valid
       assert match?({"has already been taken", _}, errors[:label])
     end
+
+    test "enforces label unicity per namespace", %{label: label} do
+      %{label: label}
+      |> Tag.changeset()
+      |> Repo.insert!()
+
+      ns = :erlang.unique_integer()
+
+      res =
+        %{label: label, ns: ns}
+        |> Tag.changeset()
+        |> Repo.insert()
+
+      assert match?({:ok, %Tag{label: ^label, ns: _}}, res)
+
+      res =
+        %{label: label, ns: ns}
+        |> Tag.changeset()
+        |> Repo.insert()
+
+      assert match?(
+               {:error,
+                %Changeset{valid?: false, errors: [label: {"has already been taken", _}]}},
+               res
+             )
+    end
   end
 
   describe ".find_or_create!/1" do

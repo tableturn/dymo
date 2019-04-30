@@ -46,7 +46,7 @@ defmodule Dymo.Tag do
     %@me{}
     |> cast(attrs, [:label, :ns])
     |> validate_required([:label])
-    |> unique_constraint(:label)
+    |> unique_constraint(:label, name: :tags_unique)
   end
 
   @doc """
