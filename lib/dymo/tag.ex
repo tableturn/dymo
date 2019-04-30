@@ -7,7 +7,10 @@ defmodule Dymo.Tag do
   """
 
   use Ecto.Schema
+
   import Ecto.Changeset
+
+  alias Dymo.Tag.Ns
 
   @me __MODULE__
 
@@ -23,7 +26,7 @@ defmodule Dymo.Tag do
   schema "tags" do
     # Regular fields.
     field :label, :string
-    field :ns, {:array, :string}, default: []
+    field :ns, Ns, default: []
     timestamps()
   end
 
@@ -32,20 +35,9 @@ defmodule Dymo.Tag do
   """
   @spec changeset(attrs()) :: Ecto.Changeset.t()
   def changeset(attrs) do
-    ns =
-      attrs
-      |> Map.get(:ns, nil)
-      |> case do
-        nil -> []
-        ns -> List.wrap(ns)
-      end
-      |> Enum.map(&"#{&1}")
-
-    attrs = Map.put(attrs, :ns, ns)
-
     %@me{}
-    |> cast(attrs, [:label, :ns])
-    |> validate_required([:label])
+    |> cast(attrs, [:ns, :label])
+    |> validate_required([:ns, :label])
     |> unique_constraint(:label, name: :tags_unique)
   end
 

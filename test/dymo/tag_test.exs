@@ -19,7 +19,7 @@ defmodule Dymo.TagTest do
       assert [] == Changeset.get_field(cs, :ns)
     end
 
-    test "casts with namespace", %{label: label} do
+    test "casts w/ namespace", %{label: label} do
       cs =
         %{label: label, ns: nil}
         |> Tag.changeset()
@@ -30,19 +30,19 @@ defmodule Dymo.TagTest do
         %{label: label, ns: :ns1}
         |> Tag.changeset()
 
-      assert ["ns1"] == Changeset.get_field(cs, :ns)
+      assert [:ns1] == Changeset.get_field(cs, :ns)
 
       cs =
         %{label: label, ns: [:ns1]}
         |> Tag.changeset()
 
-      assert ["ns1"] == Changeset.get_field(cs, :ns)
+      assert [:ns1] == Changeset.get_field(cs, :ns)
 
       cs =
         %{label: label, ns: [:ns1, :ns2]}
         |> Tag.changeset()
 
-      assert ["ns1", "ns2"] == Changeset.get_field(cs, :ns)
+      assert [:ns1, :ns2] == Changeset.get_field(cs, :ns)
     end
 
     test "enforces label unicity", %{label: label} do
@@ -64,7 +64,7 @@ defmodule Dymo.TagTest do
       |> Tag.changeset()
       |> Repo.insert!()
 
-      ns = :erlang.unique_integer()
+      ns = :"#{:erlang.unique_integer()}"
 
       res =
         %{label: label, ns: ns}
