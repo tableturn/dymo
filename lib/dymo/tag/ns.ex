@@ -4,19 +4,18 @@ defmodule Dymo.Tag.Ns do
   """
   @behaviour Ecto.Type
 
-  def type, do: {:array, :string}
+  @sep ":"
+
+  def type, do: :string
 
   def cast(nil), do: {:ok, []}
 
   def cast(ns) when is_list(ns) do
-    ns =
-      ns
-      |> Enum.map(fn
-        v when is_atom(v) -> v
-        v when is_binary(v) -> String.to_existing_atom(v)
-      end)
-
-    {:ok, ns}
+    ns
+    |> Enum.reduce_while({:ok, []}, fn
+      v, {:ok, acc} when is_atom(v) -> {:cont, {:ok, acc ++ [v]}}
+      _, _ -> {:halt, :error}
+    end)
   rescue
     ArgumentError -> :error
     FunctionClauseError -> :error
@@ -24,13 +23,19 @@ defmodule Dymo.Tag.Ns do
 
   def cast(ns), do: ns |> List.wrap() |> cast()
 
-  def load(data) when is_list(data),
-    do: {:ok, Enum.map(data, &String.to_existing_atom/1)}
+  def load(data) when is_binary(data) do
+    ns =
+      data
+      |> String.split(@sep)
+      |> Enum.map(&String.to_existing_atom/1)
+
+    {:ok, ns}
+  end
 
   def load(_), do: :error
 
   def dump(data) when is_list(data),
-    do: {:ok, Enum.map(data, &Atom.to_string/1)}
+    do: {:ok, Enum.join(data, @sep)}
 
   def dump(_), do: :error
 end

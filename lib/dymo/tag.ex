@@ -8,17 +8,22 @@ defmodule Dymo.Tag do
 
   use Ecto.Schema
 
-  import Ecto.Changeset
-
   alias Dymo.Tag.Ns
+  alias Ecto.Changeset
 
   @me __MODULE__
 
   @typedoc "Defines simple tags identified by a unique label."
   @type t :: %__MODULE__{}
 
+  @typedoc "Defines a tag's label"
+  @type label :: String.t()
+
   @typedoc "Defines a namespace for tag"
   @type ns :: nil | atom | [atom]
+
+  @typedoc "Defines a tuple representation of a tag"
+  @type tag :: label | {ns, label}
 
   @typedoc "Defines attributes for building this model's changeset"
   @type attrs :: %{required(:label) => String.t(), optional(:ns) => ns}
@@ -32,13 +37,39 @@ defmodule Dymo.Tag do
 
   @doc """
   Makes a changeset suited to manipulate the `Dymo.Tag` model.
+
+  ## Examples
+
+      iex> cs = changeset("blue")
+      ...> with %Changeset{valid?: true} <- cs, do: :ok
+      :ok
+
+      iex> cs = changeset({:paint, "blue"})
+      ...> with %Changeset{valid?: true} <- cs, do: :ok
+      :ok
+
+      iex> cs = changeset({[:paint, :car], "blue"})
+      ...> with %Changeset{valid?: true} <- cs, do: :ok
+      :ok
+
+      iex> cs = changeset({"car", "blue"})
+      ...> with %Changeset{valid?: false} <- cs, do: :error
+      :error
+
+      iex> cs = changeset(%{ns: :car, label: "blue"})
+      ...> with %Changeset{valid?: true} <- cs, do: :ok
+      :ok
   """
-  @spec changeset(attrs()) :: Ecto.Changeset.t()
+  @spec changeset(tag | attrs()) :: Ecto.Changeset.t()
+  def changeset(label) when is_binary(label), do: changeset(%{label: label})
+
+  def changeset({ns, label}) when is_binary(label), do: changeset(%{ns: ns, label: label})
+
   def changeset(attrs) do
     %@me{}
-    |> cast(attrs, [:ns, :label])
-    |> validate_required([:ns, :label])
-    |> unique_constraint(:label, name: :tags_unique)
+    |> Changeset.cast(attrs, [:ns, :label])
+    |> Changeset.validate_required([:ns, :label])
+    |> Changeset.unique_constraint(:label, name: :tags_unique)
   end
 
   @doc """
@@ -49,77 +80,49 @@ defmodule Dymo.Tag do
   ## Examples
 
       iex> %{id: id1a} = Tag.find_or_create!("novel")
-      iex> [%{id: id2a}, %{id: id3a}] = Tag.find_or_create!(["article", "book"])
-      iex> [%{id: id1b}, %{id: id2b}, %{id: id3b}] = Tag.find_or_create!(["novel", "article", "book"])
-      iex> {id1a, id2a, id3a} == {id1b, id2b, id3b}
+      ...> [%{id: id2a}, %{id: id3a}] = Tag.find_or_create!(["article", "book"])
+      ...> [%{id: id1b}, %{id: id2b}, %{id: id3b}] = Tag.find_or_create!(["novel", "article", "book"])
+      ...> {id1a, id2a, id3a} == {id1b, id2b, id3b}
+      true
+
+      iex> %{id: id4a} = Tag.find_or_create!({:romance, "novel"})
+      ...> [%{id: id5a}, %{id: id6a}] = Tag.find_or_create!([{:romance, "article"}, {:sf, "book"}])
+      ...> [%{id: id4b}, %{id: id5b}, %{id: id6b}] = Tag.find_or_create!([{:romance, "novel"}, {:romance, "article"}, {:sf, "book"}])
+      ...> {id4a, id5a, id6a} == {id4b, id5b, id6b}
       true
   """
-  @spec find_or_create!(String.t() | [String.t()]) :: t
-  def find_or_create!(labels) when is_list(labels),
-    do:
-      labels
-      |> Enum.uniq()
-      |> Enum.map(&find_or_create!/1)
-
-  def find_or_create!(label) do
-    @me
-    |> Dymo.repo().get_by(label: label)
-    |> case do
-      nil -> upsert!(label)
-      tag -> tag
-    end
+  @spec find_or_create!(tag | [tag]) :: t
+  def find_or_create!(tags) when is_list(tags) do
+    tags
+    |> Enum.map(&cast/1)
+    |> Enum.uniq()
+    |> Enum.map(&find_or_create!/1)
   end
 
-  @spec upsert!(String.t()) :: t
-  def upsert!(label) do
-    %{label: label}
+  def find_or_create!(tag) do
+    tag
+    |> cast()
+    |> Dymo.repo().insert!(
+      on_conflict: {:replace, [:updated_at]},
+      conflict_target: [:ns, :label],
+      returning: false
+    )
+  end
+
+  ###
+  ### Priv
+  ###
+  defp cast(%__MODULE__{} = tag), do: tag
+
+  defp cast(tag) do
+    tag
     |> changeset()
-    |> Dymo.repo().insert!(on_conflict: :nothing)
     |> case do
-      %{id: nil} -> Dymo.repo().get_by!(@me, label: label)
-      tag -> tag
+      %Changeset{valid?: false} ->
+        raise "Invalid tag: {#{inspect(tag)}}"
+
+      %Changeset{valid?: true} = cs ->
+        Changeset.apply_changes(cs)
     end
-  end
-
-  @doc """
-  Return true if tag is in given namespace
-
-  ## Examples
-
-      iex> match_ns?(%Tag{label: "t1"}, nil)
-      true
-
-      iex> match_ns?(%Tag{label: "t1"}, :ns1)
-      false
-
-      iex> match_ns?(%Tag{label: "ns1:t1"}, :ns1)
-      true
-
-      iex> match_ns?(%Tag{label: "ns1:t1"}, :ns2)
-      false
-
-      iex> match_ns?(%Tag{label: "ns1"}, :ns1)
-      false
-
-      iex> match_ns?(%Tag{label: "ns1:ns2:t1"}, [:ns1, :ns2])
-      true
-
-      iex> match_ns?(%Tag{label: "ns1:ns2"}, [:ns1, :ns2])
-      false
-
-      iex> match_ns?(%Tag{label: "ns1:ns2:ns3:t1"}, [:ns1, :ns2])
-      true
-  """
-  @spec match_ns?(t, ns) :: boolean
-  def match_ns?(_t, nil), do: true
-
-  def match_ns?(%{label: label}, ns) do
-    prefix =
-      ns
-      |> List.wrap()
-      |> Enum.join(":")
-      |> Kernel.<>(":")
-
-    String.starts_with?(label, prefix)
   end
 end

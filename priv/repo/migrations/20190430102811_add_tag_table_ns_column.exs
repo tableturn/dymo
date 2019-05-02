@@ -3,7 +3,7 @@ defmodule Dymo.Repo.Migrations.AddTagTableNsColumn do
 
   def change do
     alter table(:tags) do
-      add :ns, {:array, :string}
+      add :ns, :string
     end
 
     drop index(:tags, [:label])

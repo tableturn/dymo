@@ -21,28 +21,28 @@ defmodule Dymo.TagTest do
 
     test "casts w/ namespace", %{label: label} do
       cs =
-        %{label: label, ns: nil}
+        label
         |> Tag.changeset()
 
       assert [] == Changeset.get_field(cs, :ns)
 
       cs =
-        %{label: label, ns: :ns1}
+        {:ns1, label}
         |> Tag.changeset()
 
       assert [:ns1] == Changeset.get_field(cs, :ns)
 
       cs =
-        %{label: label, ns: [:ns1]}
+        {[:ns1], label}
         |> Tag.changeset()
 
       assert [:ns1] == Changeset.get_field(cs, :ns)
 
       cs =
-        %{label: label, ns: [:ns1, :ns2]}
+        {[:ns1, :ns2], label}
         |> Tag.changeset()
 
-      assert [] == Changeset.get_field(cs, :ns)
+      assert [:ns1, :ns2] == Changeset.get_field(cs, :ns)
     end
 
     test "enforces label unicity", %{label: label} do
@@ -98,15 +98,20 @@ defmodule Dymo.TagTest do
       ns = :"#{:erlang.unique_integer()}"
       tag = Tag.find_or_create!({ns, label})
 
-      assert match?(%Tag{label: ^label}, tag)
-
-      assert tag.id
-      assert label == tag.label
+      assert match?(%Tag{label: ^label, ns: [^ns]}, tag)
     end
 
     test "gets the record when it already exists", %{label: label} do
       tag1 = Tag.find_or_create!(label)
       tag2 = Tag.find_or_create!(label)
+      assert tag1 == tag2
+    end
+
+    test "gets the record when it already exists, w/ namespaces", %{label: label} do
+      ns = [:"ns#{:erlang.unique_integer()}", :"ns#{:erlang.unique_integer()}"]
+
+      tag1 = Tag.find_or_create!({ns, label})
+      tag2 = Tag.find_or_create!({ns, label})
       assert tag1 == tag2
     end
   end
