@@ -109,6 +109,28 @@ be found at [https://hexdocs.pm/dymo](https://hexdocs.pm/dymo).
 
 ## Changes
 
+### 0.3.0
+
+* `Dymo.Tagger.query_labels/2` become
+  `Dymo.Tagger.query_all_labels/{2,3}`. See below for semantic of
+  third argument.
+
+* `Dymo.Tagger.query_labels/3` become
+  `Dymo.Tagger.query_labels/{3,4}`. See below for semantic of third
+  argument.
+
+* This version adds support for namespaces. Namespaces allows to
+  isolate labels. `Dymo.Taggable` generated functions can take as
+  additional argument a namespace on which to apply the function.
+
+  WARNING: no namespace means ~root~ namespace, not all namespaces.
+
+  * `set_labels/3`: set all tags for a given namespace, keeping others untouched
+  * `add_labels/3`: add labels to the given namespace
+  * `remove_labels/3`: remove labels from the given namespace
+  * `all_labels/1`: returns all labels of the given namespace for a module
+  * `labels/2`: return all labels for the given struct and namespace
+
 ### 0.2.0
 
 * Add compatiblity with Ecto 3.x
