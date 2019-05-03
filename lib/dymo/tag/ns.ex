@@ -4,10 +4,22 @@ defmodule Dymo.Tag.Ns do
   """
   @behaviour Ecto.Type
 
+  @type t :: [atom]
+
   @sep ":"
 
+  @doc false
   def type, do: :string
 
+  @doc """
+  """
+  @spec cast!(term) :: t
+  def cast!(data) do
+    {:ok, ns} = cast(data)
+    ns
+  end
+
+  @doc false
   def cast(nil), do: {:ok, []}
 
   def cast(ns) when is_list(ns) do
@@ -23,10 +35,11 @@ defmodule Dymo.Tag.Ns do
 
   def cast(ns), do: ns |> List.wrap() |> cast()
 
+  @doc false
   def load(data) when is_binary(data) do
     ns =
       data
-      |> String.split(@sep)
+      |> String.split(@sep, trim: true)
       |> Enum.map(&String.to_existing_atom/1)
 
     {:ok, ns}
@@ -34,6 +47,7 @@ defmodule Dymo.Tag.Ns do
 
   def load(_), do: :error
 
+  @doc false
   def dump(data) when is_list(data),
     do: {:ok, Enum.join(data, @sep)}
 
