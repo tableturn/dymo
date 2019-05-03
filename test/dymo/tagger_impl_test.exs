@@ -4,19 +4,29 @@ defmodule Dymo.TaggerImplTest do
   alias Dymo.{Post, Repo}
   # doctest TaggerImpl, include: true
 
-  @labels1 ~w(t1 t2)
-  @labels2 ~w(t3 t4)
-  @labels3 ~w(t1 t3)
+  @labels1 ~w(t11 t12)
+  @labels2 ~w(t21 t22)
+  @labels3 ~w(t31 t32)
+  @labels4 ~w(t41 t42)
 
   setup :create_labelled_posts
 
-  test ".set_labels/2 overwrittes existing labels", %{posts: [p1, _]} do
+  test ".set_labels/2 overwrites existing labels", %{posts: [p1, _]} do
     TaggerImpl.set_labels(p1, @labels3)
 
     assert @labels3 ==
              p1
              |> reload
              |> TaggerImpl.labels()
+  end
+
+  test ".set_labels/3 overwrites existing labels in the same namespace only", %{posts: [p1, _]} do
+    TaggerImpl.set_labels(p1, :ns1, @labels4)
+
+    p1 = reload(p1)
+
+    assert @labels1 == TaggerImpl.labels(p1)
+    assert @labels4 == TaggerImpl.labels(p1, :ns1)
   end
 
   test ".add_labels/2 adds the extra labels", %{posts: [p1, p2]} do
@@ -31,6 +41,16 @@ defmodule Dymo.TaggerImplTest do
              p2
              |> reload
              |> TaggerImpl.labels()
+  end
+
+  test ".add_labels/3 adds the extra labels in the given namespace", %{posts: [p1, _]} do
+    TaggerImpl.add_labels(p1, @labels3)
+    TaggerImpl.add_labels(p1, :ns1, @labels3)
+
+    p1 = reload(p1)
+
+    assert Enum.uniq(@labels1 ++ @labels3) == TaggerImpl.labels(p1)
+    assert Enum.uniq(@labels3) == TaggerImpl.labels(p1, :ns1)
   end
 
   test ".remove_labels/2 removes the specified", %{posts: [p1, p2]} do
@@ -59,17 +79,26 @@ defmodule Dymo.TaggerImplTest do
              |> TaggerImpl.labels()
   end
 
-  test ".query_labels/2 gets tags from the given join table" do
+  test ".labels/2 returns the labels in given namespace", %{posts: [p1, _]} do
+    TaggerImpl.set_labels(p1, :ns1, @labels3)
+
+    assert @labels3 ==
+             p1
+             |> reload
+             |> TaggerImpl.labels(:ns1)
+  end
+
+  test ".query_all_labels/2 gets tags from the given join table" do
     assert @labels1 ++ @labels2 ==
              "posts_tags"
-             |> TaggerImpl.query_labels(:post_id)
+             |> TaggerImpl.query_all_labels(:post_id)
              |> Repo.all()
   end
 
-  test ".query_labels/3 gets tags from the given entity only", %{posts: [p1, p2]} do
-    TaggerImpl.remove_labels(p1, "t1")
+  test ".query_labels/3 gets tags from the given entity", %{posts: [p1, p2]} do
+    TaggerImpl.remove_labels(p1, "t11")
 
-    assert ["t2"] ==
+    assert ["t12"] ==
              p1
              |> TaggerImpl.query_labels("posts_tags", :post_id)
              |> Repo.all()
@@ -84,7 +113,7 @@ defmodule Dymo.TaggerImplTest do
     test "gets entity by label", %{posts: [%{id: id}, _]} do
       assert [%{id: ^id}] =
                Post
-               |> TaggerImpl.query_labeled_with("t1", "posts_tags", :post_id)
+               |> TaggerImpl.query_labeled_with("t11", "posts_tags", :post_id)
                |> Repo.all()
     end
 

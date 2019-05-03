@@ -15,6 +15,8 @@
     create: :*,
     create_directory: :*,
     description: :*,
+    drop: :*,
+    embeds_one: :*,
     field: :*,
     forward: :*,
     get: :*,

@@ -4,14 +4,10 @@ defmodule Dymo.Tagger do
   with the Dymo.Taggable macro.
   """
   use Ecto.Schema
+
+  alias Dymo.Tag
   alias Ecto.{Query, Schema}
 
-  @typedoc "A single label is a string."
-  @type label :: String.t()
-  @typedoc "A list of labels."
-  @type labels :: [String.t()]
-  @typedoc "Either a single label or a list of them."
-  @type label_or_labels :: label | labels
   @typedoc "A join table name is a string."
   @type join_table :: String.t()
   @typedoc "A join key is an atom."
@@ -23,45 +19,50 @@ defmodule Dymo.Tagger do
   If any other labels are associated to the given model, they are
   discarded if they are not part of the list of passed new labels.
 
-  See `Dymo.TaggerImpl.set_labels/2`.
+  See `Dymo.TaggerImpl.set_labels/{2,3}`.
   """
-  @callback set_labels(Schema.t(), label_or_labels) :: Schema.t()
+  @callback set_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @callback set_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
 
   @doc """
   Adds labels to a given instance of a model.
 
-  See `Dymo.TaggerImpl.add_labels/2`.
+  See `Dymo.TaggerImpl.add_labels/{2,3}`.
   """
-  @callback add_labels(Schema.t(), label_or_labels) :: Schema.t()
+  @callback add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @callback add_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
 
   @doc """
   Removes labels from a given instance of a model.
 
-  See `Dymo.TaggerImpl.remove_labels/2`.
+  See `Dymo.TaggerImpl.remove_labels/{2,3}`.
   """
-  @callback remove_labels(Schema.t(), label_or_labels) :: Schema.t()
+  @callback remove_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @callback remove_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
 
   @doc """
-  Retrieves labels associated with an target. The target
-  could be either a module or a schema.
+  Generates query for retrieving labels associated with a schema.
 
-  See `Dymo.TaggerImpl.query_labels/1`.
+  See `Dymo.TaggerImpl.query_all_labels/{2,3}`.
   """
-  @callback query_labels(join_table, join_key) :: Query.t()
+  @callback query_all_labels(join_table, join_key) :: Query.t()
+  @callback query_all_labels(join_table, join_key, Tag.ns()) :: Query.t()
 
   @doc """
-  Retrieves labels associated with an target.
+  Generates query for retrieving labels associated with a schema's
+  instance.
 
-  See `Dymo.TaggerImpl.query_labels/3`.
+  See `Dymo.TaggerImpl.query_labels/{3,4}`.
   """
   @callback query_labels(Schema.t(), join_table, join_key) :: Query.t()
+  @callback query_labels(Schema.t(), join_table, join_key, Tag.ns()) :: Query.t()
 
   @doc """
   Queries models that are tagged with the given labels.
 
   See `Dymo.query_labeled_with.query_labels/4`.
   """
-  @callback query_labeled_with(module, label_or_labels, join_table, join_key) :: Query.t()
+  @callback query_labeled_with(module, Tag.tag_or_tags(), join_table, join_key) :: Query.t()
 
   @doc """
   Use this module to implements alternative `Ecto.Tagger`
@@ -78,22 +79,37 @@ defmodule Dymo.Tagger do
 
       defdelegate set_labels(struct, label_or_labels), to: TaggerImpl
 
+      defdelegate set_labels(struct, ns, label_or_labels), to: TaggerImpl
+
       defdelegate add_labels(struct, label_or_labels), to: TaggerImpl
+
+      defdelegate add_labels(struct, ns, label_or_labels), to: TaggerImpl
 
       defdelegate remove_labels(struct, label_or_labels), to: TaggerImpl
 
-      defdelegate query_labels(join_table, join_key), to: TaggerImpl
+      defdelegate remove_labels(struct, ns, label_or_labels), to: TaggerImpl
+
+      defdelegate query_all_labels(join_table, join_key), to: TaggerImpl
+
+      defdelegate query_all_labels(join_table, join_key, ns), to: TaggerImpl
 
       defdelegate query_labels(struct, join_table, join_key), to: TaggerImpl
 
-      defdelegate query_labeled_with(module, label_or_labels, join_table, join_key),
+      defdelegate query_labels(struct, join_table, join_key, ns), to: TaggerImpl
+
+      defdelegate query_labeled_with(module, tag_or_tags, join_table, join_key),
         to: TaggerImpl
 
       defoverridable set_labels: 2,
+                     set_labels: 3,
                      add_labels: 2,
+                     add_labels: 3,
                      remove_labels: 2,
-                     query_labels: 2,
+                     remove_labels: 3,
+                     query_all_labels: 2,
+                     query_all_labels: 3,
                      query_labels: 3,
+                     query_labels: 4,
                      query_labeled_with: 4
     end
   end

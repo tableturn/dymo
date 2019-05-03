@@ -18,9 +18,9 @@ defmodule Dymo.Post do
   end
 
   @spec changeset(t | Changeset.t(), map) :: Ecto.Changeset.t()
-  def changeset(struct, attrs),
-    do:
-      struct
-      |> cast(attrs, [:title, :body])
-      |> validate_required([:title])
+  def changeset(struct, attrs) do
+    struct
+    |> cast(attrs, [:title, :body])
+    |> validate_required([:title])
+  end
 end
