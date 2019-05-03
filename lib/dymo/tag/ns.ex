@@ -48,6 +48,8 @@ defmodule Dymo.Tag.Ns do
   def load(_), do: :error
 
   @doc false
+  def dump([]), do: {:ok, ":"}
+
   def dump(data) when is_list(data),
     do: {:ok, Enum.join(data, @sep)}
 

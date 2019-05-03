@@ -19,11 +19,15 @@ defmodule Dymo.Tag do
   @typedoc "Defines a tag's label"
   @type label :: String.t()
 
-  @typedoc "Defines a namespace for tag"
-  @type ns :: nil | atom | [atom]
+  @type label_or_labels :: label | [label]
 
-  @typedoc "Defines a tuple representation of a tag"
+  @typedoc "Defines a namespace for tag"
+  @type ns :: Ns.t()
+
+  @typedoc "Defines alternative representations of a tag"
   @type tag :: label | {ns, label}
+
+  @type tag_or_tags :: tag | [tag]
 
   @typedoc "Defines attributes for building this model's changeset"
   @type attrs :: %{required(:label) => String.t(), optional(:ns) => ns}
@@ -63,6 +67,8 @@ defmodule Dymo.Tag do
   @spec changeset(tag | attrs()) :: Ecto.Changeset.t()
   def changeset(label) when is_binary(label), do: changeset(%{label: label})
 
+  def changeset({nil, label}) when is_binary(label), do: changeset(%{ns: [], label: label})
+
   def changeset({ns, label}) when is_binary(label), do: changeset(%{ns: ns, label: label})
 
   def changeset(attrs) do
@@ -91,7 +97,7 @@ defmodule Dymo.Tag do
       ...> {id4a, id5a, id6a} == {id4b, id5b, id6b}
       true
   """
-  @spec find_or_create!(tag | [tag]) :: t
+  @spec find_or_create!(tag | [tag]) :: tag | [tag]
   def find_or_create!(tags) when is_list(tags) do
     tags
     |> Enum.map(&cast/1)
@@ -109,17 +115,14 @@ defmodule Dymo.Tag do
     )
   end
 
-  ###
-  ### Priv
-  ###
-  defp cast(%__MODULE__{} = tag), do: tag
+  def cast(%__MODULE__{} = tag), do: tag
 
-  defp cast(tag) do
+  def cast(tag) do
     tag
     |> changeset()
     |> case do
       %Changeset{valid?: false} ->
-        raise "Invalid tag: {#{inspect(tag)}}"
+        raise "Invalid tag: #{inspect(tag)}"
 
       %Changeset{valid?: true} = cs ->
         Changeset.apply_changes(cs)

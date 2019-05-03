@@ -26,7 +26,7 @@ defmodule Dymo.NsTest do
   end
 
   test ".dump/1" do
-    assert {:ok, ""} == Ns.dump([])
+    assert {:ok, ":"} == Ns.dump([])
     assert {:ok, "one"} == Ns.dump([:one])
     assert {:ok, "one:two"} == Ns.dump([:one, :two])
   end

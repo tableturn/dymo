@@ -34,46 +34,60 @@ defmodule Dymo.Taggable do
 
     quote do
       alias Ecto.{Query, Schema}
-      alias Dymo.Tagger
+      alias Dymo.Tag
 
-      @spec set_labels(Schema.t(), Tagger.label() | Tagger.labels()) :: Schema.t()
+      @spec set_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
       defdelegate set_labels(struct, label_or_labels),
         to: unquote(impl)
 
-      @spec add_labels(Schema.t(), Tagger.label() | Tagger.labels()) :: Schema.t()
+      @spec set_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+      defdelegate set_labels(struct, ns, label_or_labels),
+        to: unquote(impl)
+
+      @spec add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
       defdelegate add_labels(struct, label_or_labels),
         to: unquote(impl)
 
-      @spec remove_labels(Schema.t(), Tagger.label() | Tagger.labels()) :: Schema.t()
+      @spec add_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+      defdelegate add_labels(struct, ns, label_or_labels),
+        to: unquote(impl)
+
+      @spec remove_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
       defdelegate remove_labels(struct, label_or_labels),
         to: unquote(impl)
 
-      @spec labels :: Query.t()
-      def labels(),
-        do:
-          unquote(impl).query_labels(
-            unquote(join_table),
-            unquote(join_key)
-          )
+      @spec remove_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+      defdelegate remove_labels(struct, ns, label_or_labels),
+        to: unquote(impl)
 
-      @spec labels(Schema.t()) :: Query.t()
-      def labels(%{tags: _} = taggable),
-        do:
-          unquote(impl).query_labels(
-            taggable,
-            unquote(join_table),
-            unquote(join_key)
-          )
+      @spec all_labels(Tag.ns()) :: Query.t()
+      def all_labels(ns \\ nil) do
+        unquote(impl).query_all_labels(
+          unquote(join_table),
+          unquote(join_key),
+          ns
+        )
+      end
 
-      @spec labeled_with(Tagger.label() | Tagger.labels()) :: Query.t()
-      def labeled_with(label_or_labels),
-        do:
-          unquote(impl).query_labeled_with(
-            __MODULE__,
-            label_or_labels,
-            unquote(join_table),
-            unquote(join_key)
-          )
+      @spec labels(Schema.t(), Tag.ns()) :: Query.t()
+      def labels(%{tags: _} = taggable, ns \\ nil) do
+        unquote(impl).query_labels(
+          taggable,
+          unquote(join_table),
+          unquote(join_key),
+          ns
+        )
+      end
+
+      @spec labeled_with(Tag.tag_or_tags()) :: Query.t()
+      def labeled_with(tag_or_tags) do
+        unquote(impl).query_labeled_with(
+          __MODULE__,
+          tag_or_tags,
+          unquote(join_table),
+          unquote(join_key)
+        )
+      end
     end
   end
 end
