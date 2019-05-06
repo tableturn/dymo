@@ -9,7 +9,7 @@ defmodule Dymo.Post do
 
   @type t :: %__MODULE__{}
   schema "posts" do
-    tags taggings: "posts_tags"
+    tags()
 
     # Regular fields.
     field :title, :string
