@@ -71,7 +71,7 @@ defmodule Dymo.Tag do
 
   def changeset({ns, label}) when is_binary(label), do: changeset(%{ns: ns, label: label})
 
-  def changeset(attrs) do
+  def changeset(attrs) when is_map(attrs) do
     %@me{}
     |> Changeset.cast(attrs, [:ns, :label])
     |> Changeset.validate_required([:ns, :label])

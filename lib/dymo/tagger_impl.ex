@@ -214,7 +214,8 @@ defmodule Dymo.TaggerImpl do
   defp group_by_ns(tags) when is_list(tags), do: Enum.group_by(tags, & &1.ns, & &1.label)
 
   defp flatten(tags) when is_map(tags) do
-    Enum.reduce(tags, [], fn {ns, lbls}, acc ->
+    tags
+    |> Enum.reduce([], fn {ns, lbls}, acc ->
       lbls
       |> Enum.map(&Tag.cast({ns, &1}))
       |> Enum.concat(acc)
