@@ -17,7 +17,8 @@ defmodule Dymo.MixProject do
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: cli_env_for(:test, ~w(
         coveralls coveralls.detail coveralls.html coveralls.json coveralls.post
-      )),
+          )),
+      consolidate_protocols: Mix.env() != :test,
       package: package(),
       description: "Dymo is your database labeling companion."
     ]

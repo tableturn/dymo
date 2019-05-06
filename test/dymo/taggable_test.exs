@@ -14,21 +14,18 @@ defmodule Dymo.TaggableTest do
   end
 
   defmodule Dummy do
+    use Ecto.Schema
     use Taggable, implementation: TestTagger
+
+    schema "dummies" do
+      tags()
+    end
   end
 
   describe "defines" do
     [
-      set_labels: 2,
-      set_labels: 3,
-      add_labels: 2,
-      add_labels: 3,
-      remove_labels: 2,
-      remove_labels: 3,
       all_labels: 0,
       all_labels: 1,
-      labels: 1,
-      labels: 2,
       labeled_with: 1
     ]
     |> Enum.each(fn {name, arity} ->
@@ -48,30 +45,30 @@ defmodule Dymo.TaggableTest do
     setup :taggable
 
     test ".set_labels/2", %{taggable: taggable} do
-      assert {taggable, @t} == Dummy.set_labels(taggable, @t)
+      assert {taggable, @t} == Taggable.set_labels(taggable, @t)
     end
 
     test ".add_labels/2", %{taggable: taggable} do
-      assert {taggable, @t} == Dummy.add_labels(taggable, @t)
+      assert {taggable, @t} == Taggable.add_labels(taggable, @t)
     end
 
     test ".remove_labels/2", %{taggable: taggable} do
-      assert {taggable, @t} == Dummy.remove_labels(taggable, @t)
+      assert {taggable, @t} == Taggable.remove_labels(taggable, @t)
     end
 
-    test ".all_labels/0" do
-      assert {"dummies_tags", :dummy_id} == Dummy.all_labels()
+    test ".all_labels/1" do
+      assert {"dummies_tags", :dummy_id} == Taggable.all_labels(Dummy)
     end
 
     test ".labels/1", %{taggable: taggable} do
-      assert {taggable, @join_table, @join_id} == Dummy.labels(taggable)
+      assert {taggable, @join_table, @join_id} == Taggable.labels(taggable)
     end
 
-    test ".labeled_with/1" do
-      assert {Dummy, @t, @join_table, :dummy_id} == Dummy.labeled_with(@t)
+    test ".labeled_with/2" do
+      assert {Dummy, @t, @join_table, :dummy_id} == Taggable.labeled_with(Dummy, @t)
     end
   end
 
   defp taggable(_context),
-    do: {:ok, taggable: %{id: :erlang.unique_integer(), tags: []}}
+    do: {:ok, taggable: %Dummy{id: :erlang.unique_integer(), tags: []}}
 end

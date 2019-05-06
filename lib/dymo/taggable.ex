@@ -9,12 +9,9 @@ defmodule Dymo.Taggable do
   use Dymo.Taggable
   ```
 
-  When doing so, the current module will be augmented by several functions:
+  When doing so, the current module will be added with the following functions:
 
-  - `set_labels/2`
-  - `add_labels/2`
-  - `remove_labels/2`
-  - `labels/0` and `labels/1`
+  - `all_labels/{0,1}`
   - `labeled_with/1`
 
   Doing so will require you to have a join table set up between the model and `Dymo.Tag`
@@ -24,7 +21,13 @@ defmodule Dymo.Taggable do
   behaviour and the `Dymo.TaggerImpl` implementation.
   """
 
+  require Dymo.Taggable.Protocol
+
+  alias Dymo.Tag
+  alias Dymo.Taggable.Protocol, as: P
   alias Dymo.Tagger
+  alias Ecto.Query
+  alias Ecto.Schema
 
   defmacro __using__(opts) do
     impl = Keyword.get(opts, :implementation, Dymo.TaggerImpl)
@@ -50,46 +53,14 @@ defmodule Dymo.Taggable do
     join_key = Module.get_attribute(env.module, :join_key)
 
     quote do
+      require Dymo.Taggable.Protocol
+
       alias Ecto.{Query, Schema}
       alias Dymo.Tag
-
-      @spec set_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
-      defdelegate set_labels(struct, label_or_labels),
-        to: unquote(impl)
-
-      @spec set_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
-      defdelegate set_labels(struct, ns, label_or_labels),
-        to: unquote(impl)
-
-      @spec add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
-      defdelegate add_labels(struct, label_or_labels),
-        to: unquote(impl)
-
-      @spec add_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
-      defdelegate add_labels(struct, ns, label_or_labels),
-        to: unquote(impl)
-
-      @spec remove_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
-      defdelegate remove_labels(struct, label_or_labels),
-        to: unquote(impl)
-
-      @spec remove_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
-      defdelegate remove_labels(struct, ns, label_or_labels),
-        to: unquote(impl)
 
       @spec all_labels(Tag.ns()) :: Query.t()
       def all_labels(ns \\ nil) do
         unquote(impl).query_all_labels(unquote(join_table), unquote(join_key), ns)
-      end
-
-      @spec labels(Schema.t(), Tag.ns()) :: Query.t()
-      def labels(%{tags: _} = taggable, ns \\ nil) do
-        unquote(impl).query_labels(
-          taggable,
-          unquote(join_table),
-          unquote(join_key),
-          ns
-        )
       end
 
       @spec labeled_with(Tag.tag_or_tags()) :: Query.t()
@@ -100,6 +71,26 @@ defmodule Dymo.Taggable do
           unquote(join_table),
           unquote(join_key)
         )
+      end
+
+      defimpl Dymo.Taggable.Protocol do
+        def add_labels(taggable, ns \\ nil, labels),
+          do: unquote(impl).add_labels(taggable, ns, labels)
+
+        def set_labels(taggable, ns \\ nil, labels),
+          do: unquote(impl).set_labels(taggable, ns, labels)
+
+        def remove_labels(taggable, ns \\ nil, labels),
+          do: unquote(impl).remove_labels(taggable, ns, labels)
+
+        def labels(taggable, ns \\ nil) do
+          unquote(impl).query_labels(
+            taggable,
+            unquote(join_table),
+            unquote(join_key),
+            ns
+          )
+        end
       end
     end
   end
@@ -126,4 +117,53 @@ defmodule Dymo.Taggable do
         unique: true
     end
   end
+
+  @doc """
+  Set all labels of the given namespace, replacing existing ones.
+  """
+  @spec set_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  defdelegate set_labels(taggable, lbls), to: P
+
+  @spec set_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  defdelegate set_labels(taggable, ns, lbls), to: P
+
+  @doc """
+  Add labels to the given namespace
+  """
+  @spec add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  defdelegate add_labels(taggable, lbls), to: P
+
+  @spec add_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  defdelegate add_labels(taggable, ns, lbls), to: P
+
+  @doc """
+  Remove labels of given namespace
+  """
+  @spec remove_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  defdelegate remove_labels(taggable, label_or_labels), to: P
+
+  @spec remove_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  defdelegate remove_labels(taggable, ns, label_or_labels), to: P
+
+  @doc """
+  Returns all labels of the given namespace
+  """
+  @spec labels(Schema.t()) :: Query.t()
+  defdelegate labels(taggable), to: P
+
+  @spec labels(Schema.t(), Tag.ns()) :: Query.t()
+  defdelegate labels(taggable, ns), to: P
+
+  @doc """
+  Returns all labels associad with the given schema
+  """
+  @spec all_labels(module) :: Query.t()
+  @spec all_labels(module, Tag.ns()) :: Query.t()
+  def all_labels(module, ns \\ nil), do: module.all_labels(ns)
+
+  @doc """
+  Returned all objects of given type labeled with given labels
+  """
+  @spec labeled_with(module, Tag.tag_or_tags()) :: Query.t()
+  def labeled_with(module, tags), do: module.labeled_with(tags)
 end

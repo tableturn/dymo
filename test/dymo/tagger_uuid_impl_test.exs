@@ -2,6 +2,7 @@ defmodule Dymo.TaggerUuidImplTest do
   use Dymo.DataCase, async: true
 
   alias Dymo.Repo
+  alias Dymo.Taggable
   alias Dymo.UUPost
 
   setup :create_labelled_post
@@ -10,7 +11,7 @@ defmodule Dymo.TaggerUuidImplTest do
   @labels2 ~w(tu3 tu4)
 
   test ".set_labels/2", %{post: post} do
-    post = UUPost.set_labels(post, @labels2)
+    post = Taggable.set_labels(post, @labels2)
 
     labels = post.tags |> Enum.map(& &1.label)
 
@@ -18,11 +19,11 @@ defmodule Dymo.TaggerUuidImplTest do
   end
 
   test ".all_labels/0" do
-    assert match?(@labels1, UUPost.all_labels() |> Repo.all())
+    assert match?(@labels1, UUPost |> Taggable.all_labels() |> Repo.all())
   end
 
   test ".labels/1", %{post: post} do
-    assert match?(@labels1, post |> UUPost.labels() |> Repo.all())
+    assert match?(@labels1, post |> Taggable.labels() |> Repo.all())
   end
 
   defp create_labelled_post(_) do
@@ -30,7 +31,7 @@ defmodule Dymo.TaggerUuidImplTest do
       %UUPost{}
       |> UUPost.changeset(%{title: "Yo #{:erlang.unique_integer()}!", body: "Plop"})
       |> Repo.insert!(read_after_writes: true)
-      |> UUPost.set_labels(@labels1)
+      |> Taggable.set_labels(@labels1)
       |> reload()
 
     {:ok, post: post}
