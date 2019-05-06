@@ -119,6 +119,16 @@ be found at [https://hexdocs.pm/dymo](https://hexdocs.pm/dymo).
 
 ## Changes
 
+### 0.3.2
+
+* Use protocols for dispatching labelling functions to implementation
+* Add generic `Taggable` functions for using the `Taggable.Protocol`
+  protocol
+
+### 0.3.1
+
+* Add support for `:binary_id` primary key for taggable structures
+
 ### 0.3.0
 
 * `Dymo.Tagger.query_labels/2` become
