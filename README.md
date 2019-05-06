@@ -32,7 +32,9 @@ def deps do
 end
 ```
 
-Then, you can install the `Tag` migration in your application (Note that for umbrella apps, you'll need to first `cd` into the app containing your repo migrations):
+Then, you can install the `Tag` migration in your application (Note
+that for umbrella apps, you'll need to first `cd` into the app
+containing your repo migrations):
 
 ```bash
 $ mix dymo.install
@@ -40,27 +42,35 @@ $ mix dymo.install
 * creating priv/repo/migrations/20180828154957_create_tags.exs
 ```
 
-Once done, you should start and make a join table for the model(s) you want to be able to label. There is a mix task for this too!
+Once done, you should start and make a join table for the model(s) you
+want to be able to label. There is a mix task for this too!
 
 ```bash
 $ mix dymo.join_table MyApp.Post
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20180828154958_create_posts_tags.exs
+
+```
 Once your database gets migrated, a new table posts_tags will be created.
-You might want to add the following relationship to your MyApp.Post schema:
-  many_to_many :tags, Dymo.Tag,
-                join_through: "posts_tags",
-                on_replace: :delete,
-                unique: true
+
+You can add the tags relationship with dedicated macro in your MyApp.Post schema:
+
+``` elixir
+schema "..." do
+    tags()
+end
 ```
 
-If you follow the directives given by the tasks, you should then have a fully labellable Post model. Congratulations!
+If you follow the directives given by the tasks, you should then have
+a fully labellable Post model. Congratulations!
 
 ## Using Dymo.Taggable
 
-When a module uses `Dymo.Taggable`, many shortcut functions are meta-programmed into it.
+When a module uses `Dymo.Taggable`, many shortcut functions are
+meta-programmed into it.
 
-It becomes easy to achieve labelling-related tasks. All the examples bellow assyme that a `Post` module calls `use Dymo.Taggable`.
+It becomes easy to achieve labelling-related tasks. All the examples
+bellow assyme that a `Post` module calls `use Dymo.Taggable`.
 
 ### Editing Labels
 

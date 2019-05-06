@@ -144,9 +144,9 @@ defmodule Dymo.TaggerImpl do
   instance.
   """
   @spec query_labels(Schema.t(), join_table, join_key, Tag.ns()) :: Query.t()
-  def query_labels(%{id: id, tags: _}, jt, jk, ns \\ nil) do
+  def query_labels(%{__struct__: schema, tags: _} = struct, jt, jk, ns \\ nil) do
     Tag
-    |> join(:inner, [t], tg in ^jt, on: t.id == tg.tag_id and field(tg, ^jk) == ^id)
+    |> join_tagging(pkey_type(schema), struct, jt, jk)
     |> where_ns(Tag.Ns.cast!(ns))
     |> distinct([t, tg], t.label)
     |> select([t, tg], t.label)
@@ -222,4 +222,24 @@ defmodule Dymo.TaggerImpl do
   end
 
   defp where_ns(q, ns), do: where(q, [t, tg], t.ns == ^ns)
+
+  defp join_tagging(q, [:id], %{id: id}, jt, jk) do
+    join(q, :inner, [t], tg in ^jt, on: t.id == tg.tag_id and field(tg, ^jk) == ^id)
+  end
+
+  defp join_tagging(q, [:binary_id], %{id: id}, jt, jk) do
+    join(q, :inner, [t], tg in ^jt,
+      on: t.id == tg.tag_id and field(tg, ^jk) == type(^id, :binary_id)
+    )
+  end
+
+  defp join_tagging(_, _, _, _, _) do
+    raise "#{__MODULE__} only support `[:id]` and `[:binary_id]` primary keys"
+  end
+
+  defp pkey_type(schema) do
+    :primary_key
+    |> schema.__schema__()
+    |> Enum.map(&schema.__schema__(:type, &1))
+  end
 end

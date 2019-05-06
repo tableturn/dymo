@@ -32,6 +32,23 @@ defmodule Dymo.Taggable do
     join_table = Keyword.get(opts, :join_table, Tagger.join_table(__CALLER__.module))
     join_key = Keyword.get(opts, :join_key, Tagger.join_key(__CALLER__.module))
 
+    Module.put_attribute(__CALLER__.module, :tagger_impl, impl)
+    Module.put_attribute(__CALLER__.module, :join_table, join_table)
+    Module.put_attribute(__CALLER__.module, :join_key, join_key)
+
+    quote do
+      import Dymo.Taggable
+
+      @tagger_impl unquote(impl)
+      @before_compile Dymo.Taggable
+    end
+  end
+
+  defmacro __before_compile__(env) do
+    impl = Module.get_attribute(env.module, :tagger_impl)
+    join_table = Module.get_attribute(env.module, :join_table)
+    join_key = Module.get_attribute(env.module, :join_key)
+
     quote do
       alias Ecto.{Query, Schema}
       alias Dymo.Tag
@@ -62,11 +79,7 @@ defmodule Dymo.Taggable do
 
       @spec all_labels(Tag.ns()) :: Query.t()
       def all_labels(ns \\ nil) do
-        unquote(impl).query_all_labels(
-          unquote(join_table),
-          unquote(join_key),
-          ns
-        )
+        unquote(impl).query_all_labels(unquote(join_table), unquote(join_key), ns)
       end
 
       @spec labels(Schema.t(), Tag.ns()) :: Query.t()
@@ -88,6 +101,29 @@ defmodule Dymo.Taggable do
           unquote(join_key)
         )
       end
+    end
+  end
+
+  @doc """
+  Use this macro in your Ecto schema to add `tags` field
+  """
+  defmacro tags do
+    taggings =
+      __CALLER__.module
+      |> Module.get_attribute(:join_table)
+      |> case do
+        nil ->
+          raise "Please declares `use #{__MODULE__}` before using the macro `#{__MODULE__}.tags/1`"
+
+        jt ->
+          jt
+      end
+
+    quote do
+      many_to_many :tags, Dymo.Tag,
+        join_through: unquote(taggings),
+        on_replace: :delete,
+        unique: true
     end
   end
 end
