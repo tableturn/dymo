@@ -9,11 +9,12 @@ defmodule Dymo.Post do
 
   @type t :: %__MODULE__{}
   schema "posts" do
-    # Associations.
-    many_to_many :tags, Dymo.Tag, join_through: "posts_tags", on_replace: :delete, unique: true
+    tags taggings: "posts_tags"
+
     # Regular fields.
     field :title, :string
     field :body, :string
+
     timestamps()
   end
 

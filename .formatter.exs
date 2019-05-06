@@ -36,6 +36,7 @@
     serialize: :*,
     socket: :*,
     store_named: :*,
+    tags: :*,
     trigger: :*,
     types: :*,
     whereis: :*,

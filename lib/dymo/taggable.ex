@@ -33,6 +33,8 @@ defmodule Dymo.Taggable do
     join_key = Keyword.get(opts, :join_key, Tagger.join_key(__CALLER__.module))
 
     quote do
+      import Dymo.Taggable
+
       alias Ecto.{Query, Schema}
       alias Dymo.Tag
 
@@ -88,6 +90,23 @@ defmodule Dymo.Taggable do
           unquote(join_key)
         )
       end
+    end
+  end
+
+  @doc """
+  Use this macro in your Ecto schema to add `tags` field
+
+  Options:
+  * `taggings`: table for tagging (default: `taggings`)
+  """
+  defmacro tags(opts) do
+    taggings = Keyword.get(opts, :taggings, "taggings")
+
+    quote do
+      many_to_many :tags, Dymo.Tag,
+        join_through: unquote(taggings),
+        on_replace: :delete,
+        unique: true
     end
   end
 end
