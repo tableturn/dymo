@@ -4,7 +4,7 @@ defmodule Dymo.MixProject do
   def project do
     [
       app: :dymo,
-      version: "0.3.1",
+      version: "0.3.2",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -17,7 +17,8 @@ defmodule Dymo.MixProject do
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: cli_env_for(:test, ~w(
         coveralls coveralls.detail coveralls.html coveralls.json coveralls.post
-      )),
+          )),
+      consolidate_protocols: Mix.env() != :test,
       package: package(),
       description: "Dymo is your database labeling companion."
     ]
