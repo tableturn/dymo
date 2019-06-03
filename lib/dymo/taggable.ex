@@ -9,7 +9,7 @@ defmodule Dymo.Taggable do
   use Dymo.Taggable
   ```
 
-  When doing so, the current module will be added with the following functions:
+  When doing so, the following functions will be added to the caller module:
 
   - `all_labels/{0,1}`
   - `labeled_with/1`
@@ -27,6 +27,8 @@ defmodule Dymo.Taggable do
   alias Dymo.Tagger
   alias Ecto.Query
   alias Ecto.Schema
+
+  @type t :: P.t()
 
   defmacro __using__(opts) do
     impl = Keyword.get(opts, :implementation, Dymo.TaggerImpl)
@@ -156,7 +158,6 @@ defmodule Dymo.Taggable do
   @doc """
   Returns all labels associad with the given schema
   """
-  @spec all_labels(module) :: Query.t()
   @spec all_labels(module, Tag.ns() | nil) :: Query.t()
   def all_labels(module, ns \\ nil), do: module.all_labels(ns)
 

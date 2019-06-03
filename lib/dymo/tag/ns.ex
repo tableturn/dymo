@@ -4,7 +4,7 @@ defmodule Dymo.Tag.Ns do
   """
   @behaviour Ecto.Type
 
-  @type t :: [atom]
+  @type t :: atom | [atom]
 
   @sep ":"
 
