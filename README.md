@@ -51,11 +51,12 @@ $ mix dymo.join_table MyApp.Post
 * creating priv/repo/migrations/20180828154958_create_posts_tags.exs
 
 ```
+
 Once your database gets migrated, a new table posts_tags will be created.
 
 You can add the tags relationship with dedicated macro in your MyApp.Post schema:
 
-``` elixir
+```elixir
 schema "..." do
     tags()
 end
@@ -119,42 +120,46 @@ be found at [https://hexdocs.pm/dymo](https://hexdocs.pm/dymo).
 
 ## Changes
 
+### 0.3.3
+
+- Adds some more spec.
+
 ### 0.3.2
 
-* Use protocols for dispatching labelling functions to implementation
-* Add generic `Taggable` functions for using the `Taggable.Protocol`
+- Use protocols for dispatching labelling functions to implementation
+- Add generic `Taggable` functions for using the `Taggable.Protocol`
   protocol
 
 ### 0.3.1
 
-* Add support for `:binary_id` primary key for taggable structures
+- Add support for `:binary_id` primary key for taggable structures
 
 ### 0.3.0
 
-* `Dymo.Tagger.query_labels/2` become
+- `Dymo.Tagger.query_labels/2` become
   `Dymo.Tagger.query_all_labels/{2,3}`. See below for semantic of
   third argument.
 
-* `Dymo.Tagger.query_labels/3` become
+- `Dymo.Tagger.query_labels/3` become
   `Dymo.Tagger.query_labels/{3,4}`. See below for semantic of third
   argument.
 
-* This version adds support for namespaces. Namespaces allows to
+- This version adds support for namespaces. Namespaces allows to
   isolate labels. `Dymo.Taggable` generated functions can take as
   additional argument a namespace on which to apply the function.
 
   WARNING: no namespace means ~root~ namespace, not all namespaces.
 
-  * `set_labels/3`: set all tags for a given namespace, keeping others untouched
-  * `add_labels/3`: add labels to the given namespace
-  * `remove_labels/3`: remove labels from the given namespace
-  * `all_labels/1`: returns all labels of the given namespace for a module
-  * `labels/2`: return all labels for the given struct and namespace
+  - `set_labels/3`: set all tags for a given namespace, keeping others untouched
+  - `add_labels/3`: add labels to the given namespace
+  - `remove_labels/3`: remove labels from the given namespace
+  - `all_labels/1`: returns all labels of the given namespace for a module
+  - `labels/2`: return all labels for the given struct and namespace
 
 ### 0.2.0
 
-* Add compatiblity with Ecto 3.x
+- Add compatiblity with Ecto 3.x
 
 ### 0.1.x
 
-* Compatible with Ecto 2.x
+- Compatible with Ecto 2.x
