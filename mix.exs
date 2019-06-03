@@ -12,7 +12,10 @@ defmodule Dymo.MixProject do
       name: "Dymo",
       source_url: "https://github.com/tableturn/dymo",
       homepage_url: "https://github.com/tableturn/dymo",
-      dialyzer: [plt_add_deps: :project, plt_add_apps: [:public_key]],
+      dialyzer: [
+        plt_add_deps: :project,
+        plt_add_apps: [:mix, :ecto]
+      ],
       docs: [extras: ~w(README.md)],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: cli_env_for(:test, ~w(
