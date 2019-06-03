@@ -158,7 +158,7 @@ defmodule Dymo.Taggable do
   Returns all labels associad with the given schema
   """
   @spec all_labels(module) :: Query.t()
-  @spec all_labels(module, Tag.ns()) :: Query.t()
+  @spec all_labels(module, Tag.ns() | nil) :: Query.t()
   def all_labels(module, ns \\ nil), do: module.all_labels(ns)
 
   @doc """
