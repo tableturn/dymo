@@ -20,7 +20,6 @@ defmodule Dymo.Taggable do
   For more information about their usage and typings, have a look at the `Dymo.Tagger`
   behaviour and the `Dymo.TaggerImpl` implementation.
   """
-
   require Dymo.Taggable.Protocol
 
   alias Dymo.Tag

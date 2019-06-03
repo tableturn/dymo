@@ -97,8 +97,8 @@ defmodule Dymo.TaggerImpl do
       iex> Enum.map(tags, & &1.label)
       ["seven"]
   """
-  @spec remove_labels(Schema.t(), Tag.label() | Tag.labels()) :: Schema.t()
-  @spec remove_labels(Schema.t(), Tag.ns() | nil, Tag.label() | Tag.labels()) :: Schema.t()
+  @spec remove_labels(Schema.t(), Tag.label() | Tag.label_or_labels()) :: Schema.t()
+  @spec remove_labels(Schema.t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
   def remove_labels(struct, ns \\ nil, lbls)
 
   def remove_labels(%{tags: %NotLoaded{}} = struct, ns, lbls) do
