@@ -20,19 +20,19 @@ steps:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all
 
-  - name: slack-notify
-    image: plugins/slack
-    settings:
-      webhook:
-        from_secret: slack_webhook
-      channel: ci
-      username: Drone
-      template: >
-        [{{repo.name}}:{{build.branch}}]
-        <{{build.link}}|Build {{truncate build.commit 8}}> by {{build.author}}
-        was a {{build.status}}.
-    when:
-      status: [success, failure]
+  # - name: slack-notify
+  #   image: plugins/slack
+  #   settings:
+  #     webhook:
+  #       from_secret: slack_webhook
+  #     channel: ci
+  #     username: Drone
+  #     template: >
+  #       [{{repo.name}}:{{build.branch}}]
+  #       <{{build.link}}|Build {{truncate build.commit 8}}> by {{build.author}}
+  #       was a {{build.status}}.
+  #   when:
+  #     status: [success, failure]
 
   # # Upload coverage reports, only for the latest elixir.
   # - name: codecov
