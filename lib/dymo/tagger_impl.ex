@@ -33,7 +33,8 @@ defmodule Dymo.TaggerImpl do
       iex> Enum.map(tags, & &1.label)
       ["one", "two"]
   """
-  @spec set_labels(Schema.t(), Tag.ns(), Tag.label() | [Tag.label()]) :: Schema.t()
+  @spec set_labels(Schema.t(), Tag.label() | [Tag.label()]) :: Schema.t()
+  @spec set_labels(Schema.t(), Tag.ns() | nil, Tag.label() | [Tag.label()]) :: Schema.t()
   def set_labels(struct, ns \\ nil, lbls)
 
   def set_labels(%{tags: %NotLoaded{}} = struct, ns, lbls) do
@@ -65,7 +66,8 @@ defmodule Dymo.TaggerImpl do
       iex> Enum.map(tags, & &1.label)
       ["three", "four", "five"]
   """
-  @spec add_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  @spec add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @spec add_labels(Schema.t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
   def add_labels(struct, ns \\ nil, lbls)
 
   def add_labels(%{tags: %NotLoaded{}} = struct, ns, lbls) do
@@ -95,7 +97,8 @@ defmodule Dymo.TaggerImpl do
       iex> Enum.map(tags, & &1.label)
       ["seven"]
   """
-  @spec remove_labels(Schema.t(), Tag.ns(), Tag.label() | Tag.labels()) :: Schema.t()
+  @spec remove_labels(Schema.t(), Tag.label() | Tag.labels()) :: Schema.t()
+  @spec remove_labels(Schema.t(), Tag.ns() | nil, Tag.label() | Tag.labels()) :: Schema.t()
   def remove_labels(struct, ns \\ nil, lbls)
 
   def remove_labels(%{tags: %NotLoaded{}} = struct, ns, lbls) do
@@ -128,7 +131,7 @@ defmodule Dymo.TaggerImpl do
       ...>  |> Dymo.repo().all()
       ["eight", "nine"]
   """
-  @spec query_all_labels(join_table, join_key, Tag.ns()) :: Query.t()
+  @spec query_all_labels(join_table, join_key, Tag.ns() | nil) :: Query.t()
   def query_all_labels(jt, jk, ns \\ nil) when is_binary(jt) and is_atom(jk) do
     Tag
     |> join(:left, [t], tg in ^jt, on: t.id == tg.tag_id)
@@ -143,7 +146,7 @@ defmodule Dymo.TaggerImpl do
   Generates query for retrieving labels associated with a schema's
   instance.
   """
-  @spec query_labels(Schema.t(), join_table, join_key, Tag.ns()) :: Query.t()
+  @spec query_labels(Schema.t(), join_table, join_key, Tag.ns() | nil) :: Query.t()
   def query_labels(%{__struct__: schema, tags: _} = struct, jt, jk, ns \\ nil) do
     Tag
     |> join_tagging(pkey_type(schema), struct, jt, jk)
@@ -192,7 +195,7 @@ defmodule Dymo.TaggerImpl do
     |> order_by([m, tg, t], asc: m.inserted_at)
   end
 
-  @spec labels(Schema.t(), Tag.ns()) :: [Tag.label()]
+  @spec labels(Schema.t(), Tag.ns() | nil) :: [Tag.label()]
   def labels(%{id: _, tags: _} = struct, ns \\ nil) do
     ns = Tag.Ns.cast!(ns)
 
