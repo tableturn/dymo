@@ -15,22 +15,20 @@ defmodule Dymo.Tag do
 
   @typedoc "Defines simple tags identified by a unique label."
   @type t :: %__MODULE__{}
+  @type ns :: Ns.t()
 
   @typedoc "Defines a tag's label"
   @type label :: String.t()
-
+  @typedoc "Defines a single flat label or a list of labels."
   @type label_or_labels :: label | [label]
 
-  @typedoc "Defines a namespace for tag"
-  @type ns :: Ns.t()
-
   @typedoc "Defines alternative representations of a tag"
-  @type tag :: label | {ns, label}
-
+  @type tag :: label | {ns(), label}
+  @typedoc "Defines a single flat tag or a list of tags."
   @type tag_or_tags :: tag | [tag]
 
   @typedoc "Defines attributes for building this model's changeset"
-  @type attrs :: %{required(:label) => String.t(), optional(:ns) => ns}
+  @type attrs :: %{required(:label) => String.t(), optional(:ns) => ns()}
 
   schema "tags" do
     # Regular fields.
@@ -97,7 +95,7 @@ defmodule Dymo.Tag do
       ...> {id4a, id5a, id6a} == {id4b, id5b, id6b}
       true
   """
-  @spec find_or_create!(tag | [tag]) :: tag | [tag]
+  @spec find_or_create!(tag_or_tags) :: tag_or_tags
   def find_or_create!(tags) when is_list(tags) do
     tags
     |> Enum.map(&cast/1)
