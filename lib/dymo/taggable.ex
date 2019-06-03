@@ -64,11 +64,11 @@ defmodule Dymo.Taggable do
         unquote(impl).query_all_labels(unquote(join_table), unquote(join_key), ns)
       end
 
-      @spec labeled_with(Tag.tag_or_tags()) :: Query.t()
-      def labeled_with(tag_or_tags) do
+      @spec labeled_with(Tag.label_or_labels()) :: Query.t()
+      def labeled_with(label_or_labels) do
         unquote(impl).query_labeled_with(
           __MODULE__,
-          tag_or_tags,
+          label_or_labels,
           unquote(join_table),
           unquote(join_key)
         )
@@ -164,6 +164,6 @@ defmodule Dymo.Taggable do
   @doc """
   Returned all objects of given type labeled with given labels
   """
-  @spec labeled_with(module, Tag.tag_or_tags()) :: Query.t()
+  @spec labeled_with(module, Tag.label_or_labels()) :: Query.t()
   def labeled_with(module, tags), do: module.labeled_with(tags)
 end

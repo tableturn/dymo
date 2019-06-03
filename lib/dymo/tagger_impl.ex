@@ -178,10 +178,10 @@ defmodule Dymo.TaggerImpl do
       ...>  |> Dymo.repo().all()
       []
   """
-  @spec query_labeled_with(module, Tag.tag_or_tags(), join_table(), join_key()) :: Query.t()
-  def query_labeled_with(module, tag_or_tags, jt, jk) when is_binary(jt) and is_atom(jk) do
+  @spec query_labeled_with(module, Tag.label_or_labels(), join_table(), join_key()) :: Query.t()
+  def query_labeled_with(module, label_or_labels, jt, jk) when is_binary(jt) and is_atom(jk) do
     {nss, lbls} =
-      tag_or_tags
+      label_or_labels
       |> List.wrap()
       |> Enum.map(&Tag.cast/1)
       |> Enum.reduce({[], []}, fn tag, {nss, lbls} -> {[tag.ns | nss], [tag.label | lbls]} end)
