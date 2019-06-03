@@ -62,7 +62,7 @@ defmodule Dymo.Tagger do
 
   See `Dymo.query_labeled_with.query_labels/4`.
   """
-  @callback query_labeled_with(module, Tag.tag_or_tags(), join_table, join_key) :: Query.t()
+  @callback query_labeled_with(module, Tag.label_or_labels(), join_table, join_key) :: Query.t()
 
   @doc """
   Use this module to implements alternative `Ecto.Tagger`
@@ -97,7 +97,7 @@ defmodule Dymo.Tagger do
 
       defdelegate query_labels(struct, join_table, join_key, ns), to: TaggerImpl
 
-      defdelegate query_labeled_with(module, tag_or_tags, join_table, join_key),
+      defdelegate query_labeled_with(module, label_or_labels, join_table, join_key),
         to: TaggerImpl
 
       defoverridable set_labels: 2,

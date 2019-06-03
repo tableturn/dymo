@@ -18,14 +18,9 @@ defmodule Dymo.Tag do
   @type ns :: Ns.t()
 
   @typedoc "Defines a tag's label"
-  @type label :: String.t()
+  @type label :: String.t() | {ns(), String.t()}
   @typedoc "Defines a single flat label or a list of labels."
   @type label_or_labels :: label | [label]
-
-  @typedoc "Defines alternative representations of a tag"
-  @type tag :: label | {ns(), label}
-  @typedoc "Defines a single flat tag or a list of tags."
-  @type tag_or_tags :: tag | [tag]
 
   @typedoc "Defines attributes for building this model's changeset"
   @type attrs :: %{required(:label) => String.t(), optional(:ns) => ns()}
@@ -62,7 +57,7 @@ defmodule Dymo.Tag do
       ...> with %Changeset{valid?: true} <- cs, do: :ok
       :ok
   """
-  @spec changeset(tag | attrs()) :: Ecto.Changeset.t()
+  @spec changeset(label | attrs()) :: Ecto.Changeset.t()
   def changeset(label) when is_binary(label), do: changeset(%{label: label})
 
   def changeset({nil, label}) when is_binary(label), do: changeset(%{ns: [], label: label})
@@ -95,7 +90,7 @@ defmodule Dymo.Tag do
       ...> {id4a, id5a, id6a} == {id4b, id5b, id6b}
       true
   """
-  @spec find_or_create!(tag_or_tags) :: tag_or_tags
+  @spec find_or_create!(label_or_labels) :: label_or_labels
   def find_or_create!(tags) when is_list(tags) do
     tags
     |> Enum.map(&cast/1)
