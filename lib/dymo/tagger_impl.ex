@@ -34,8 +34,8 @@ defmodule Dymo.TaggerImpl do
       iex> Enum.map(tags, & &1.label)
       ["one", "two"]
   """
-  @spec set_labels(Taggable.t(), Tag.label_or_labels()) :: Schema.t()
-  @spec set_labels(Taggable.t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
+  @spec set_labels(Taggable.t(), String.t() | [String.t()]) :: Schema.t()
+  @spec set_labels(Taggable.t(), Tag.ns() | nil, String.t() | [String.t()]) :: Schema.t()
   def set_labels(struct, ns \\ nil, lbls)
 
   def set_labels(%{tags: %NotLoaded{}} = struct, ns, lbls) do
@@ -67,8 +67,8 @@ defmodule Dymo.TaggerImpl do
       iex> Enum.map(tags, & &1.label)
       ["three", "four", "five"]
   """
-  @spec add_labels(Taggable.t(), Tag.label_or_labels()) :: Schema.t()
-  @spec add_labels(Taggable.t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
+  @spec add_labels(Taggable.t(), String.t() | [String.t()]) :: Schema.t()
+  @spec add_labels(Taggable.t(), Tag.ns() | nil, String.t() | [String.t()]) :: Schema.t()
   def add_labels(struct, ns \\ nil, lbls)
 
   def add_labels(%{tags: %NotLoaded{}} = struct, ns, lbls) do
@@ -98,8 +98,8 @@ defmodule Dymo.TaggerImpl do
       iex> Enum.map(tags, & &1.label)
       ["seven"]
   """
-  @spec remove_labels(Taggable.t(), Tag.label() | Tag.label_or_labels()) :: Schema.t()
-  @spec remove_labels(Taggable.t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
+  @spec remove_labels(Taggable.t(), String.t() | [String.t()]) :: Schema.t()
+  @spec remove_labels(Taggable.t(), Tag.ns() | nil, String.t() | [String.t()]) :: Schema.t()
   def remove_labels(struct, ns \\ nil, lbls)
 
   def remove_labels(%{tags: %NotLoaded{}} = struct, ns, lbls) do
