@@ -59,7 +59,8 @@ defmodule Dymo.Taggable do
       alias Ecto.{Query, Schema}
       alias Dymo.Tag
 
-      @spec all_labels(Tag.ns()) :: Query.t()
+      @spec all_labels() :: Query.t()
+      @spec all_labels(Tag.ns() | nil) :: Query.t()
       def all_labels(ns \\ nil) do
         unquote(impl).query_all_labels(unquote(join_table), unquote(join_key), ns)
       end
@@ -122,42 +123,43 @@ defmodule Dymo.Taggable do
   @doc """
   Set all labels of the given namespace, replacing existing ones.
   """
-  @spec set_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @spec set_labels(t(), Tag.label_or_labels()) :: Schema.t()
   defdelegate set_labels(taggable, lbls), to: P
 
-  @spec set_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  @spec set_labels(t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
   defdelegate set_labels(taggable, ns, lbls), to: P
 
   @doc """
   Add labels to the given namespace
   """
-  @spec add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @spec add_labels(t(), Tag.label_or_labels()) :: Schema.t()
   defdelegate add_labels(taggable, lbls), to: P
 
-  @spec add_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  @spec add_labels(t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
   defdelegate add_labels(taggable, ns, lbls), to: P
 
   @doc """
   Remove labels of given namespace
   """
-  @spec remove_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @spec remove_labels(t(), Tag.label() | Tag.label_or_labels()) :: Schema.t()
   defdelegate remove_labels(taggable, label_or_labels), to: P
 
-  @spec remove_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  @spec remove_labels(t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
   defdelegate remove_labels(taggable, ns, label_or_labels), to: P
 
   @doc """
   Returns all labels of the given namespace
   """
-  @spec labels(Schema.t()) :: Query.t()
+  @spec labels(t()) :: [Tag.label()]
   defdelegate labels(taggable), to: P
 
-  @spec labels(Schema.t(), Tag.ns()) :: Query.t()
+  @spec labels(t(), Tag.ns() | nil) :: [Tag.label()]
   defdelegate labels(taggable, ns), to: P
 
   @doc """
   Returns all labels associad with the given schema
   """
+  @spec all_labels(module) :: Query.t()
   @spec all_labels(module, Tag.ns() | nil) :: Query.t()
   def all_labels(module, ns \\ nil), do: module.all_labels(ns)
 
