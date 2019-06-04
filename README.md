@@ -120,6 +120,10 @@ be found at [https://hexdocs.pm/dymo](https://hexdocs.pm/dymo).
 
 ## Changes
 
+### 0.3.4
+
+- Adds some more spec.
+
 ### 0.3.3
 
 - Adds some more spec.
