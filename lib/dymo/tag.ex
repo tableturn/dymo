@@ -17,13 +17,18 @@ defmodule Dymo.Tag do
   @type t :: %__MODULE__{}
   @type ns :: Ns.t()
 
+  @typedoc "Defines a string or a list of strings."
+  @type string_or_strings :: String.t() | [String.t()]
   @typedoc "Defines a tag's label"
   @type label :: String.t() | {ns(), String.t()}
   @typedoc "Defines a single flat label or a list of labels."
   @type label_or_labels :: label | [label]
 
   @typedoc "Defines attributes for building this model's changeset"
-  @type attrs :: %{required(:label) => String.t(), optional(:ns) => ns()}
+  @type changeset_attrs :: %{
+          optional(:ns) => ns(),
+          required(:label) => String.t()
+        }
 
   schema "tags" do
     # Regular fields.
@@ -57,19 +62,20 @@ defmodule Dymo.Tag do
       ...> with %Changeset{valid?: true} <- cs, do: :ok
       :ok
   """
-  @spec changeset(label | attrs()) :: Ecto.Changeset.t()
+  @spec changeset(label | changeset_attrs()) :: Ecto.Changeset.t()
+  # Called for a given string label.
   def changeset(label) when is_binary(label), do: changeset(%{label: label})
-
+  # Called for a nil namespace and a label.
   def changeset({nil, label}) when is_binary(label), do: changeset(%{ns: [], label: label})
-
+  # Called for a given namespace and label.
   def changeset({ns, label}) when is_binary(label), do: changeset(%{ns: ns, label: label})
-
-  def changeset(attrs) when is_map(attrs) do
-    %@me{}
-    |> Changeset.cast(attrs, [:ns, :label])
-    |> Changeset.validate_required([:ns, :label])
-    |> Changeset.unique_constraint(:label, name: :tags_unique)
-  end
+  # Called with a proper %{ns: ns, label: label}
+  def changeset(attrs) when is_map(attrs),
+    do:
+      %@me{}
+      |> Changeset.cast(attrs, [:ns, :label])
+      |> Changeset.validate_required([:ns, :label])
+      |> Changeset.unique_constraint(:label, name: :tags_unique)
 
   @doc """
   This function gets an existing tag using its label. If the tag doesn't
@@ -91,34 +97,31 @@ defmodule Dymo.Tag do
       true
   """
   @spec find_or_create!(label_or_labels) :: label_or_labels
-  def find_or_create!(tags) when is_list(tags) do
-    tags
-    |> Enum.map(&cast/1)
-    |> Enum.uniq()
-    |> Enum.map(&find_or_create!/1)
-  end
+  def find_or_create!(tags) when is_list(tags),
+    do:
+      tags
+      |> Enum.map(&cast/1)
+      |> Enum.uniq()
+      |> Enum.map(&find_or_create!/1)
 
-  def find_or_create!(tag) do
-    tag
-    |> cast()
-    |> Dymo.repo().insert!(
-      on_conflict: {:replace, [:updated_at]},
-      conflict_target: [:ns, :label],
-      returning: false
-    )
-  end
+  def find_or_create!(tag),
+    do:
+      tag
+      |> cast()
+      |> Dymo.repo().insert!(
+        on_conflict: {:replace, [:updated_at]},
+        conflict_target: [:ns, :label],
+        returning: false
+      )
 
-  def cast(%__MODULE__{} = tag), do: tag
+  def cast(%@me{} = struct), do: struct
 
-  def cast(tag) do
-    tag
+  def cast(stuff) do
+    stuff
     |> changeset()
     |> case do
-      %Changeset{valid?: false} ->
-        raise "Invalid tag: #{inspect(tag)}"
-
-      %Changeset{valid?: true} = cs ->
-        Changeset.apply_changes(cs)
+      %Changeset{valid?: false} -> raise "Invalid tag: #{inspect(stuff)}"
+      %Changeset{valid?: true} = cs -> Changeset.apply_changes(cs)
     end
   end
 end

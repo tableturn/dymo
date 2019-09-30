@@ -1,26 +1,26 @@
 defmodule Dymo.Tag.Ns do
-  @moduledoc """
-  Describes a tag's namespace
-  """
-  @behaviour Ecto.Type
+  @moduledoc "Describes a tag's namespace."
+  use Ecto.Type
 
   @type t :: atom | [atom]
 
   @sep ":"
 
-  @doc false
-  def type, do: :string
+  @impl Ecto.Type
+  @spec type :: :string
+  def type,
+    do: :string
 
-  @doc """
-  """
-  @spec cast!(term) :: t
+  @spec cast!(t) :: binary
   def cast!(data) do
     {:ok, ns} = cast(data)
     ns
   end
 
-  @doc false
-  def cast(nil), do: {:ok, []}
+  @impl Ecto.Type
+  @spec cast(t) :: {:ok, binary} | :error
+  def cast(nil),
+    do: {:ok, []}
 
   def cast(ns) when is_list(ns) do
     ns
@@ -33,9 +33,14 @@ defmodule Dymo.Tag.Ns do
     FunctionClauseError -> :error
   end
 
-  def cast(ns), do: ns |> List.wrap() |> cast()
+  def cast(ns),
+    do:
+      ns
+      |> List.wrap()
+      |> cast()
 
-  @doc false
+  @impl Ecto.Type
+  @spec load(any) :: :error | {:ok, t}
   def load(data) when is_binary(data) do
     ns =
       data
@@ -45,13 +50,17 @@ defmodule Dymo.Tag.Ns do
     {:ok, ns}
   end
 
-  def load(_), do: :error
+  def load(_),
+    do: :error
 
-  @doc false
-  def dump([]), do: {:ok, ":"}
+  @impl Ecto.Type
+  @spec dump(any) :: :error | {:ok, binary}
+  def dump([]),
+    do: {:ok, ":"}
 
   def dump(data) when is_list(data),
     do: {:ok, Enum.join(data, @sep)}
 
-  def dump(_), do: :error
+  def dump(_),
+    do: :error
 end

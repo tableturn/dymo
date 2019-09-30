@@ -21,24 +21,24 @@ defmodule Dymo.Tagger do
 
   See `Dymo.TaggerImpl.set_labels/{2,3}`.
   """
-  @callback set_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
-  @callback set_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  @callback set_labels(Schema.t(), Tag.string_or_strings()) :: Schema.t()
+  @callback set_labels(Schema.t(), Tag.ns(), Tag.string_or_strings()) :: Schema.t()
 
   @doc """
   Adds labels to a given instance of a model.
 
   See `Dymo.TaggerImpl.add_labels/{2,3}`.
   """
-  @callback add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
-  @callback add_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  @callback add_labels(Schema.t(), Tag.string_or_strings()) :: Schema.t()
+  @callback add_labels(Schema.t(), Tag.ns(), Tag.string_or_strings()) :: Schema.t()
 
   @doc """
   Removes labels from a given instance of a model.
 
   See `Dymo.TaggerImpl.remove_labels/{2,3}`.
   """
-  @callback remove_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
-  @callback remove_labels(Schema.t(), Tag.ns(), Tag.label_or_labels()) :: Schema.t()
+  @callback remove_labels(Schema.t(), Tag.string_or_strings()) :: Schema.t()
+  @callback remove_labels(Schema.t(), Tag.ns(), Tag.string_or_strings()) :: Schema.t()
 
   @doc """
   Generates query for retrieving labels associated with a schema.
@@ -78,38 +78,28 @@ defmodule Dymo.Tagger do
       alias Dymo.TaggerImpl
 
       defdelegate set_labels(struct, label_or_labels), to: TaggerImpl
-
       defdelegate set_labels(struct, ns, label_or_labels), to: TaggerImpl
 
       defdelegate add_labels(struct, label_or_labels), to: TaggerImpl
-
       defdelegate add_labels(struct, ns, label_or_labels), to: TaggerImpl
 
       defdelegate remove_labels(struct, label_or_labels), to: TaggerImpl
-
       defdelegate remove_labels(struct, ns, label_or_labels), to: TaggerImpl
 
       defdelegate query_all_labels(join_table, join_key), to: TaggerImpl
-
       defdelegate query_all_labels(join_table, join_key, ns), to: TaggerImpl
 
       defdelegate query_labels(struct, join_table, join_key), to: TaggerImpl
-
       defdelegate query_labels(struct, join_table, join_key, ns), to: TaggerImpl
 
       defdelegate query_labeled_with(module, label_or_labels, join_table, join_key),
         to: TaggerImpl
 
-      defoverridable set_labels: 2,
-                     set_labels: 3,
-                     add_labels: 2,
-                     add_labels: 3,
-                     remove_labels: 2,
-                     remove_labels: 3,
-                     query_all_labels: 2,
-                     query_all_labels: 3,
-                     query_labels: 3,
-                     query_labels: 4,
+      defoverridable set_labels: [2, 3],
+                     add_labels: [2, 3],
+                     remove_labels: [2, 3],
+                     query_all_labels: [2, 3],
+                     query_labels: [3, 4],
                      query_labeled_with: 4
     end
   end
