@@ -22,11 +22,9 @@ defmodule Dymo.Taggable do
   """
   require Dymo.Taggable.Protocol
 
-  alias Dymo.Tag
+  alias Ecto.{Query, Schema}
+  alias Dymo.{Tag, Tagger}
   alias Dymo.Taggable.Protocol, as: P
-  alias Dymo.Tagger
-  alias Ecto.Query
-  alias Ecto.Schema
 
   @type t :: P.t()
 
@@ -61,19 +59,18 @@ defmodule Dymo.Taggable do
 
       @spec all_labels() :: Query.t()
       @spec all_labels(Tag.ns() | nil) :: Query.t()
-      def all_labels(ns \\ nil) do
-        unquote(impl).query_all_labels(unquote(join_table), unquote(join_key), ns)
-      end
+      def all_labels(ns \\ nil),
+        do: unquote(impl).query_all_labels(unquote(join_table), unquote(join_key), ns)
 
       @spec labeled_with(Tag.label_or_labels()) :: Query.t()
-      def labeled_with(label_or_labels) do
-        unquote(impl).query_labeled_with(
-          __MODULE__,
-          label_or_labels,
-          unquote(join_table),
-          unquote(join_key)
-        )
-      end
+      def labeled_with(label_or_labels),
+        do:
+          unquote(impl).query_labeled_with(
+            __MODULE__,
+            label_or_labels,
+            unquote(join_table),
+            unquote(join_key)
+          )
 
       defimpl Dymo.Taggable.Protocol do
         def add_labels(taggable, ns \\ nil, labels),
@@ -85,28 +82,26 @@ defmodule Dymo.Taggable do
         def remove_labels(taggable, ns \\ nil, labels),
           do: unquote(impl).remove_labels(taggable, ns, labels)
 
-        def labels(taggable, ns \\ nil) do
-          unquote(impl).query_labels(
-            taggable,
-            unquote(join_table),
-            unquote(join_key),
-            ns
-          )
-        end
+        def labels(taggable, ns \\ nil),
+          do:
+            unquote(impl).query_labels(
+              taggable,
+              unquote(join_table),
+              unquote(join_key),
+              ns
+            )
       end
     end
   end
 
-  @doc """
-  Use this macro in your Ecto schema to add `tags` field
-  """
+  @doc "Use this macro in your Ecto schema to add `tags` field."
   defmacro tags do
     taggings =
       __CALLER__.module
       |> Module.get_attribute(:join_table)
       |> case do
         nil ->
-          raise "Please declares `use #{__MODULE__}` before using the macro `#{__MODULE__}.tags/1`"
+          raise "Please declare `use #{__MODULE__}` before using `#{__MODULE__}.tags/1`."
 
         jt ->
           jt
@@ -120,52 +115,40 @@ defmodule Dymo.Taggable do
     end
   end
 
-  @doc """
-  Set all labels of the given namespace, replacing existing ones.
-  """
+  @doc "Sets all labels of the given namespace, replacing existing ones."
   @spec set_labels(t(), Tag.label_or_labels()) :: Schema.t()
   defdelegate set_labels(taggable, lbls), to: P
 
   @spec set_labels(t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
   defdelegate set_labels(taggable, ns, lbls), to: P
 
-  @doc """
-  Add labels to the given namespace
-  """
+  @doc "Adds labels to the given namespace."
   @spec add_labels(t(), Tag.label_or_labels()) :: Schema.t()
   defdelegate add_labels(taggable, lbls), to: P
 
   @spec add_labels(t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
   defdelegate add_labels(taggable, ns, lbls), to: P
 
-  @doc """
-  Remove labels of given namespace
-  """
+  @doc "Remove labels of given namespace."
   @spec remove_labels(t(), Tag.label() | Tag.label_or_labels()) :: Schema.t()
   defdelegate remove_labels(taggable, label_or_labels), to: P
 
   @spec remove_labels(t(), Tag.ns() | nil, Tag.label_or_labels()) :: Schema.t()
   defdelegate remove_labels(taggable, ns, label_or_labels), to: P
 
-  @doc """
-  Returns all labels of the given namespace
-  """
+  @doc "Returns all labels of the given namespace."
   @spec labels(t()) :: [Tag.label()]
   defdelegate labels(taggable), to: P
 
   @spec labels(t(), Tag.ns() | nil) :: [Tag.label()]
   defdelegate labels(taggable, ns), to: P
 
-  @doc """
-  Returns all labels associad with the given schema
-  """
+  @doc "Returns all labels associad with the given schema."
   @spec all_labels(module) :: Query.t()
   @spec all_labels(module, Tag.ns() | nil) :: Query.t()
   def all_labels(module, ns \\ nil), do: module.all_labels(ns)
 
-  @doc """
-  Returned all objects of given type labeled with given labels
-  """
+  @doc "Returnes all objects of given type labeled with given labels."
   @spec labeled_with(module, Tag.label_or_labels()) :: Query.t()
   def labeled_with(module, tags), do: module.labeled_with(tags)
 end
