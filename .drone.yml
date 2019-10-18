@@ -1,7 +1,31 @@
 kind: pipeline
 name: dymo
 
+volumes:
+  - name: cache
+    host:
+      path: /tmp/drone/cache
+
+services:
+  - name: database
+    image: postgres:10.6
+    environment:
+      POSTGRES_DB: dymo_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
 steps:
+  # Get cached stuff from last run.
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: cache
+        path: /cache
+    settings:
+      restore: true
+      mount: [/root/.mix, /root/.hex, ./deps, ./_build, ./.git]
+
+  # Run tests.
   - name: build
     image: elixir:1.7
     commands:
@@ -20,19 +44,20 @@ steps:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all
 
-  # - name: slack-notify
-  #   image: plugins/slack
-  #   settings:
-  #     webhook:
-  #       from_secret: slack_webhook
-  #     channel: ci
-  #     username: Drone
-  #     template: >
-  #       [{{repo.name}}:{{build.branch}}]
-  #       <{{build.link}}|Build {{truncate build.commit 8}}> by {{build.author}}
-  #       was a {{build.status}}.
-  #   when:
-  #     status: [success, failure]
+  # Webhook our slack channel.
+  - name: slack-notify
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: slack_webhook
+      channel: ci
+      username: Drone
+      template: >
+        [{{repo.name}}:{{build.branch}}]
+        <{{build.link}}|Build {{truncate build.commit 8}}> by {{build.author}}
+        was a {{build.status}}.
+    when:
+      status: [success, failure]
 
   # # Upload coverage reports, only for the latest elixir.
   # - name: codecov
@@ -43,10 +68,12 @@ steps:
   #   files:
   #     - cover/excoveralls.json
 
-services:
-  - name: database
-    image: postgres:10.6
-    environment:
-      POSTGRES_DB: dymo_test
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+  # Save cache.
+  - name: rebuild-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: cache
+        path: /cache
+    settings:
+      rebuild: true
+      mount: [/root/.mix, /root/.hex, ./deps, ./_build, ./.git]
