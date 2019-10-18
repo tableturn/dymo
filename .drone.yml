@@ -23,7 +23,7 @@ steps:
         path: /cache
     settings:
       restore: true
-      mount: [/root/.mix, /root/.hex, ./deps, ./_build, ./.git]
+      mount: [/root/.mix, /root/.hex, ./deps, ./_build]
 
   # Run tests.
   - name: build
@@ -78,4 +78,4 @@ steps:
         path: /cache
     settings:
       rebuild: true
-      mount: [/root/.mix, /root/.hex, ./deps, ./_build, ./.git]
+      mount: [/root/.mix, /root/.hex, ./deps, ./_build]
