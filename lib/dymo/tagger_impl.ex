@@ -77,13 +77,20 @@ defmodule Dymo.TaggerImpl do
       |> Dymo.repo().preload(:tags)
       |> add_labels(ns, lbls)
 
-  def add_labels(%{id: _, tags: tags} = struct, ns, lbls),
-    do:
-      lbls
-      |> List.wrap()
-      |> Enum.map(&Tag.cast({ns, &1}))
-      |> Enum.concat(tags)
-      |> maintain_labels_tags(struct)
+  def add_labels(%{id: _, tags: tags} = struct, ns, lbls) do
+    tags_map =
+      tags
+      |> Enum.reduce(%{}, fn %Tag{ns: ns, label: label}, acc ->
+        Map.put(acc, {ns, label}, true)
+      end)
+
+    lbls
+    |> List.wrap()
+    |> Enum.map(&Tag.cast({ns, &1}))
+    |> Enum.reject(&(Map.get(tags_map, {&1.ns, &1.label}) == true))
+    |> Enum.concat(tags)
+    |> maintain_labels_tags(struct)
+  end
 
   @doc """
   Removes labels from a given instance of a model.
