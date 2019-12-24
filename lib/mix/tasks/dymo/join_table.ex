@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Dymo.JoinTable do
     plural = Inflex.pluralize(singular)
     # Eg: posts
     plural_downcase = Macro.underscore(plural)
-    # Eg: posts_tags.
+    # Eg: taggings.
     table = Tagger.join_table(model)
     # Eg: post_id
     key = Tagger.join_key(model)
@@ -38,26 +38,41 @@ defmodule Mix.Tasks.Dymo.JoinTable do
     defmodule Repo.Migrations.Create#{plural}Tags do
       use Ecto.Migration
 
+      @unicity_fields ~w(tag_id #{key})a
+      @taggings_constraint "num_nonnulls(#{key}) = 1"
+
       def change do
         create table(:#{table}, primary_key: false) do
-          add :#{key}, references(:#{plural_downcase})
+          # Reference to the tag itself.
           add :tag_id, references(:tags)
+          # Reference to each taggables.
+          add :#{key}, references(:#{plural_downcase})
         end
 
+        # Index the tag ID column for fast joins.
         create index(:#{table}, [:tag_id])
+        # Each taggable model should be indexed as well.
         create index(:#{table}, [:#{singular_downcase}_id])
-        create index(:#{table}, [:tag_id, :#{key}], unique: true)
+
+        # A single entity can only be tagged once with a given tag, enforce unicity with this index.
+        create index(:#{table}, @unicity_fields, unique: true, name: :#{table}_unicity)
+        # This constraint ensures that only one column is set on any given tagging.
+        create constraint(:#{table}, :must_reference_one, check: @taggings_constraint)
       end
     end
     """)
 
     IO.puts("""
     Once your database gets migrated, a new table #{table} will be created.
+
     You might want to add the following relationship to your #{model} schema:
       many_to_many :tags, Dymo.Tag,
                     join_through: \"#{table}\",
                     on_replace: :delete,
                     unique: true
+
+    Alternativelly, you can simply use the `tags()` macro in your schema declaration,
+    as long as you `use Dymo.Taggable` at the top of your module.
     """)
   end
 end
