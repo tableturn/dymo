@@ -1,6 +1,8 @@
 defmodule Dymo do
   @moduledoc false
 
+  @repo Application.get_env(:dymo, :ecto_repo)
+
   @spec repo() :: module
-  def repo, do: :dymo |> Application.get_env(:ecto_repos) |> hd()
+  def repo, do: @repo
 end

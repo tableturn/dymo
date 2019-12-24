@@ -10,6 +10,6 @@ config :dymo,
        password: System.get_env("POSTGRES_PASSWORD") || "postgres",
        database: System.get_env("POSTGRES_DB") || "dymo_test"
 
-config :dymo, :ecto_repos, [Dymo.Repo]
+config :dymo, :ecto_repo, Dymo.Repo
 
 config :logger, level: :warn
