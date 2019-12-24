@@ -36,7 +36,7 @@ Then, you can install the `Tag` migration in your application (Note
 that for umbrella apps, you'll need to first `cd` into the app
 containing your repo migrations):
 
-```bash
+```
 $ mix dymo.install
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20180828154957_create_tags.exs
@@ -45,22 +45,31 @@ $ mix dymo.install
 Once done, you should start and make a join table for the model(s) you
 want to be able to label. There is a mix task for this too!
 
-```bash
+```
 $ mix dymo.join_table MyApp.Post
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20180828154958_create_posts_tags.exs
+Once your database gets migrated, a new table posts_tags will be created.
 
+You might want to add the following relationship to your MyApp.Post schema:
+  many_to_many :tags, Dymo.Tag,
+                join_through: "posts_tags",
+                on_replace: :delete,
+                unique: true
+
+Alternativelly, you can simply use the `tags()` macro in your schema declaration,
+as long as you `use Dymo.Taggable` at the top of your module.
+```
+
+Note that you can tweak the migrations. For example, you can rename the `posts_tags`
+table to whatever you want (eg. `taggings`) as long as you consistently specify it
+when using the `Tagger` macros:
+
+```elixir
+use Dymo.Taggable, join_table: "taggings"
 ```
 
 Once your database gets migrated, a new table posts_tags will be created.
-
-You can add the tags relationship with dedicated macro in your MyApp.Post schema:
-
-```elixir
-schema "..." do
-    tags()
-end
-```
 
 If you follow the directives given by the tasks, you should then have
 a fully labellable Post model. Congratulations!
@@ -78,10 +87,18 @@ bellow assyme that a `Post` module calls `use Dymo.Taggable`.
 To set the tags on an instance of a post:
 
 ```elixir
-Post.set_labels(post, ~w(ten eleven))
+Post.set_labels(post, nil, ~w(ten eleven))
 ```
 
-Similarily, you can add / remove labels using `Post.add_labels/2` and `Post.remove_labels/2`.
+Similarily, you can add / remove labels using `Post.add_labels` and `Post.remove_labels`.
+
+You can also force labelling to only use existing tags (avoid on-the-fly creation) by
+passing appropriate options. For example:
+
+````elixir
+post |> Post.set_labels(nil, ~w(ten eleven), create_missing: false)
+post |> Post.add_labels("Whatever", create_missing: false)
+``
 
 ### Querying Labels
 
@@ -95,7 +112,7 @@ post
   |> Map.get(:tags)
   |> Enum.map(&(&1.label))
 #
-```
+````
 
 Using the helper function:
 
@@ -104,7 +121,7 @@ post
   |> Post.labels()
 ```
 
-Note that the `Post.labels/1` also accepts a module directly as an input - in that case it would return all labels that were ever associated with posts.
+Note that the `Post.labels/1` also accepts a module directly as an input - in that case it would return all labels that were ever associated with all posts.
 
 You can also query models that are tagged with specific labels by doing the following:
 
@@ -119,6 +136,10 @@ and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/dymo](https://hexdocs.pm/dymo).
 
 ## Changes
+
+### 0.3.5
+
+- Small improvements.
 
 ### 0.3.4
 
@@ -141,7 +162,7 @@ be found at [https://hexdocs.pm/dymo](https://hexdocs.pm/dymo).
 ### 0.3.0
 
 - `Dymo.Tagger.query_labels/2` become
-  `Dymo.Tagger.query_all_labels/{2,3}`. See below for semantic of
+  `Dymo.Tagger.query_all_labels/3`. See below for semantic of
   third argument.
 
 - `Dymo.Tagger.query_labels/3` become
@@ -157,7 +178,7 @@ be found at [https://hexdocs.pm/dymo](https://hexdocs.pm/dymo).
   - `set_labels/3`: set all tags for a given namespace, keeping others untouched
   - `add_labels/3`: add labels to the given namespace
   - `remove_labels/3`: remove labels from the given namespace
-  - `all_labels/1`: returns all labels of the given namespace for a module
+  - `all_labels/3`: returns all labels of the given namespace for a module
   - `labels/2`: return all labels for the given struct and namespace
 
 ### 0.2.0
