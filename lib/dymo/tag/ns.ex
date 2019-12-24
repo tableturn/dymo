@@ -2,64 +2,48 @@ defmodule Dymo.Tag.Ns do
   @moduledoc "Describes a tag's namespace."
   use Ecto.Type
 
-  @type t :: atom | [atom]
-
-  @sep ":"
+  @type t :: nil | atom
 
   @impl Ecto.Type
   @spec type :: :string
   def type,
     do: :string
 
-  @spec cast!(t) :: binary
+  @impl Ecto.Type
+  @spec cast(t) :: {:ok, t} | :error
+  def cast(nil),
+    do: {:ok, :root}
+
+  def cast(value) when is_atom(value),
+    do: {:ok, value}
+
+  def cast(_),
+    do: :error
+
+  @spec cast!(t) :: t
   def cast!(data) do
     {:ok, ns} = cast(data)
     ns
   end
 
   @impl Ecto.Type
-  @spec cast(t) :: {:ok, binary} | :error
-  def cast(nil),
-    do: {:ok, []}
-
-  def cast(ns) when is_list(ns) do
-    ns
-    |> Enum.reduce_while({:ok, []}, fn
-      v, {:ok, acc} when is_atom(v) -> {:cont, {:ok, acc ++ [v]}}
-      _, _ -> {:halt, :error}
-    end)
-  rescue
-    ArgumentError -> :error
-    FunctionClauseError -> :error
-  end
-
-  def cast(ns),
-    do:
-      ns
-      |> List.wrap()
-      |> cast()
-
-  @impl Ecto.Type
   @spec load(any) :: :error | {:ok, t}
-  def load(data) when is_binary(data) do
-    ns =
-      data
-      |> String.split(@sep, trim: true)
-      |> Enum.map(&String.to_existing_atom/1)
+  def load(nil),
+    do: {:ok, :root}
 
-    {:ok, ns}
-  end
+  def load(value) when is_binary(value),
+    do: {:ok, String.to_existing_atom(value)}
 
   def load(_),
     do: :error
 
   @impl Ecto.Type
-  @spec dump(any) :: :error | {:ok, binary}
-  def dump([]),
-    do: {:ok, ":"}
+  @spec dump(any) :: :error | {:ok, [atom]}
+  def dump(nil),
+    do: {:ok, "root"}
 
-  def dump(data) when is_list(data),
-    do: {:ok, Enum.join(data, @sep)}
+  def dump(value) when is_atom(value),
+    do: {:ok, "#{value}"}
 
   def dump(_),
     do: :error

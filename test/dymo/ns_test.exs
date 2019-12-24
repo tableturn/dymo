@@ -8,26 +8,17 @@ defmodule Dymo.NsTest do
   end
 
   test ".cast/1" do
-    assert {:ok, []} == Ns.cast(nil)
-    assert {:ok, []} == Ns.cast([])
-    assert {:ok, []} == Ns.cast([])
-    assert {:ok, [:one]} == Ns.cast(:one)
-    assert {:ok, [:one]} == Ns.cast([:one])
-    assert {:ok, [:one, :two]} == Ns.cast([:one, :two])
-
-    assert :error == Ns.cast([:one, "two"])
+    assert match?({:ok, :root}, Ns.cast(nil))
+    assert match?({:ok, :one}, Ns.cast(:one))
   end
 
   test ".load/1" do
-    assert {:ok, []} == Ns.load("")
-    assert {:ok, []} == Ns.load(":")
-    assert {:ok, [:one]} == Ns.load("one")
-    assert {:ok, [:one, :two]} == Ns.load("one:two")
+    assert match?({:ok, :root}, Ns.load(nil))
+    assert match?({:ok, :one}, Ns.load("one"))
   end
 
   test ".dump/1" do
-    assert {:ok, ":"} == Ns.dump([])
-    assert {:ok, "one"} == Ns.dump([:one])
-    assert {:ok, "one:two"} == Ns.dump([:one, :two])
+    assert match?({:ok, "root"}, Ns.dump(:root))
+    assert match?({:ok, "one"}, Ns.dump(:one))
   end
 end
