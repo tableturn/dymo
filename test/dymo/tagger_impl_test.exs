@@ -8,131 +8,150 @@ defmodule Dymo.TaggerImplTest do
   @labels2 ~w(t21 t22)
   @labels3 ~w(t31 t32)
   @labels4 ~w(t41 t42)
+  @nonexistent_labels ~w(tn1 tn2)
 
   setup :create_labelled_posts
 
-  test ".set_labels/2 overwrites existing labels", %{posts: [p1, _]} do
-    TaggerImpl.set_labels(p1, @labels3)
+  describe ".set_labels/3" do
+    test "can overwrites existing labels", %{posts: [p1, _]} do
+      p1 |> TaggerImpl.set_labels(nil, @labels3)
 
-    assert @labels3 ==
-             p1
-             |> reload
-             |> TaggerImpl.labels()
+      assert @labels3 ==
+               p1
+               |> reload
+               |> TaggerImpl.labels(nil)
+    end
+
+    test "can overwrite existing labels with the same namespace", %{posts: [p1, _]} do
+      TaggerImpl.set_labels(p1, :ns1, @labels4)
+
+      p1 = reload(p1)
+
+      assert @labels1 == TaggerImpl.labels(p1, nil)
+      assert @labels4 == TaggerImpl.labels(p1, :ns1)
+    end
+
+    test "can be prevented from creating new tags", %{posts: [p1, _]} do
+      p1 |> TaggerImpl.set_labels(nil, @nonexistent_labels, create_missing: false)
+      p1 = reload(p1)
+      assert [] == p1 |> TaggerImpl.labels(nil)
+    end
   end
 
-  test ".set_labels/3 overwrites existing labels in the same namespace only", %{posts: [p1, _]} do
-    TaggerImpl.set_labels(p1, :ns1, @labels4)
+  describe ".add_labels/4" do
+    test "adds the extra labels", %{posts: [p1, p2]} do
+      p1 |> TaggerImpl.add_labels(:root, @labels3)
 
-    p1 = reload(p1)
+      assert Enum.uniq(@labels1 ++ @labels3) ==
+               p1
+               |> reload
+               |> TaggerImpl.labels(nil)
 
-    assert @labels1 == TaggerImpl.labels(p1)
-    assert @labels4 == TaggerImpl.labels(p1, :ns1)
+      assert @labels2 ==
+               p2
+               |> reload
+               |> TaggerImpl.labels(nil)
+    end
+
+    test "adds the extra labels in the given namespace", %{posts: [p1, _]} do
+      p1 |> TaggerImpl.add_labels(nil, @labels3)
+      p1 |> TaggerImpl.add_labels(:ns1, @labels3)
+
+      p1 = reload(p1)
+
+      assert Enum.uniq(@labels1 ++ @labels3) == p1 |> TaggerImpl.labels(nil)
+      assert @labels3 == TaggerImpl.labels(p1, :ns1)
+    end
   end
 
-  test ".add_labels/2 adds the extra labels", %{posts: [p1, p2]} do
-    TaggerImpl.add_labels(p1, @labels3)
+  describe ".remove_labels/3" do
+    test "removes the specified labels", %{posts: [p1, p2]} do
+      p1 |> TaggerImpl.remove_labels(nil, @labels3)
 
-    assert Enum.uniq(@labels1 ++ @labels3) ==
-             p1
-             |> reload
-             |> TaggerImpl.labels()
+      assert Enum.uniq(@labels1 -- @labels3) ==
+               p1
+               |> reload
+               |> TaggerImpl.labels(nil)
 
-    assert Enum.uniq(@labels2) ==
-             p2
-             |> reload
-             |> TaggerImpl.labels()
+      assert @labels2 ==
+               p2
+               |> reload
+               |> TaggerImpl.labels(nil)
+    end
   end
 
-  test ".add_labels/3 adds the extra labels in the given namespace", %{posts: [p1, _]} do
-    TaggerImpl.add_labels(p1, @labels3)
-    TaggerImpl.add_labels(p1, :ns1, @labels3)
+  describe ".labels/2" do
+    test "returns the tagged labels", %{posts: [p1, p2]} do
+      assert @labels1 ==
+               p1
+               |> reload
+               |> TaggerImpl.labels(nil)
 
-    p1 = reload(p1)
+      assert @labels2 ==
+               p2
+               |> reload
+               |> TaggerImpl.labels(nil)
+    end
 
-    assert Enum.uniq(@labels1 ++ @labels3) == TaggerImpl.labels(p1)
-    assert Enum.uniq(@labels3) == TaggerImpl.labels(p1, :ns1)
+    test "returns the tagged labels in a given namespace", %{posts: [p1, _]} do
+      p1 |> TaggerImpl.set_labels(:ns1, @labels3)
+
+      assert @labels3 ==
+               p1
+               |> reload
+               |> TaggerImpl.labels(:ns1)
+    end
   end
 
-  test ".remove_labels/2 removes the specified", %{posts: [p1, p2]} do
-    TaggerImpl.remove_labels(p1, @labels3)
-
-    assert Enum.uniq(@labels1 -- @labels3) ==
-             p1
-             |> reload
-             |> TaggerImpl.labels()
-
-    assert Enum.uniq(@labels2) ==
-             p2
-             |> reload
-             |> TaggerImpl.labels()
+  describe ".query_all_labels/3" do
+    test "gets tags from the given join table" do
+      assert @labels1 ++ @labels2 ==
+               "taggings"
+               |> TaggerImpl.query_all_labels(:post_id, nil)
+               |> Repo.all()
+    end
   end
 
-  test ".labels/1 returns the tagged labels", %{posts: [p1, p2]} do
-    assert @labels1 ==
-             p1
-             |> reload
-             |> TaggerImpl.labels()
+  describe ".query_labels/3" do
+    test "gets tags from the given entity", %{posts: [p1, p2]} do
+      p1 |> TaggerImpl.remove_labels(nil, "t11")
 
-    assert @labels2 ==
-             p2
-             |> reload
-             |> TaggerImpl.labels()
-  end
+      assert ["t12"] ==
+               p1
+               |> TaggerImpl.query_labels("taggings", :post_id, nil)
+               |> Repo.all()
 
-  test ".labels/2 returns the labels in given namespace", %{posts: [p1, _]} do
-    TaggerImpl.set_labels(p1, :ns1, @labels3)
-
-    assert @labels3 ==
-             p1
-             |> reload
-             |> TaggerImpl.labels(:ns1)
-  end
-
-  test ".query_all_labels/2 gets tags from the given join table" do
-    assert @labels1 ++ @labels2 ==
-             "posts_tags"
-             |> TaggerImpl.query_all_labels(:post_id)
-             |> Repo.all()
-  end
-
-  test ".query_labels/3 gets tags from the given entity", %{posts: [p1, p2]} do
-    TaggerImpl.remove_labels(p1, "t11")
-
-    assert ["t12"] ==
-             p1
-             |> TaggerImpl.query_labels("posts_tags", :post_id)
-             |> Repo.all()
-
-    assert @labels2 ==
-             p2
-             |> TaggerImpl.query_labels("posts_tags", :post_id)
-             |> Repo.all()
+      assert @labels2 ==
+               p2
+               |> TaggerImpl.query_labels("taggings", :post_id, nil)
+               |> Repo.all()
+    end
   end
 
   describe ".query_labeled_with/4" do
     test "gets entity by label", %{posts: [%{id: id}, _]} do
       assert [%{id: ^id}] =
                Post
-               |> TaggerImpl.query_labeled_with("t11", "posts_tags", :post_id)
+               |> TaggerImpl.query_labeled_with("t11", "taggings", :post_id)
                |> Repo.all()
     end
 
     test "matches all tags", %{posts: [%{id: id1}, %{id: id2}]} do
       assert [%{id: ^id1}] =
                Post
-               |> TaggerImpl.query_labeled_with(@labels1, "posts_tags", :post_id)
+               |> TaggerImpl.query_labeled_with(@labels1, "taggings", :post_id)
                |> Repo.all()
 
       assert [%{id: ^id2}] =
                Post
-               |> TaggerImpl.query_labeled_with(@labels2, "posts_tags", :post_id)
+               |> TaggerImpl.query_labeled_with(@labels2, "taggings", :post_id)
                |> Repo.all()
     end
 
     test "doesn't match if at least one tag differs" do
       assert [] ==
                Post
-               |> TaggerImpl.query_labeled_with(@labels3, "posts_tags", :post_id)
+               |> TaggerImpl.query_labeled_with(@labels3, "taggings", :post_id)
                |> Repo.all()
     end
   end
@@ -144,7 +163,7 @@ defmodule Dymo.TaggerImplTest do
         &(%Post{}
           |> Post.changeset(%{title: "Hello #{:erlang.unique_integer()}!", body: "Bodybuilder."})
           |> Repo.insert!()
-          |> TaggerImpl.set_labels(&1)
+          |> TaggerImpl.set_labels(nil, &1)
           |> reload)
       )
 
