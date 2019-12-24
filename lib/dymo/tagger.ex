@@ -14,39 +14,35 @@ defmodule Dymo.Tagger do
   @type join_key :: atom
 
   @doc """
+  Adds labels to a given instance of a model.
+
+  See `Dymo.TaggerImpl.add_labels/3`.
+  """
+  @callback add_labels(Schema.t(), Tag.ns() | nil, Tag.string_or_strings()) :: Schema.t()
+
+  @doc """
   Sets the labels associated with an instance of a model.
 
   If any other labels are associated to the given model, they are
   discarded if they are not part of the list of passed new labels.
 
-  See `Dymo.TaggerImpl.set_labels/{2,3}`.
+  See `Dymo.TaggerImpl.set_labels/3`.
   """
-  @callback set_labels(Schema.t(), Tag.string_or_strings()) :: Schema.t()
-  @callback set_labels(Schema.t(), Tag.ns(), Tag.string_or_strings()) :: Schema.t()
-
-  @doc """
-  Adds labels to a given instance of a model.
-
-  See `Dymo.TaggerImpl.add_labels/{2,3}`.
-  """
-  @callback add_labels(Schema.t(), Tag.string_or_strings()) :: Schema.t()
-  @callback add_labels(Schema.t(), Tag.ns(), Tag.string_or_strings()) :: Schema.t()
+  @callback set_labels(Schema.t(), Tag.ns() | nil, Tag.string_or_strings()) :: Schema.t()
 
   @doc """
   Removes labels from a given instance of a model.
 
-  See `Dymo.TaggerImpl.remove_labels/{2,3}`.
+  See `Dymo.TaggerImpl.remove_labels/3`.
   """
-  @callback remove_labels(Schema.t(), Tag.string_or_strings()) :: Schema.t()
   @callback remove_labels(Schema.t(), Tag.ns(), Tag.string_or_strings()) :: Schema.t()
 
   @doc """
   Generates query for retrieving labels associated with a schema.
 
-  See `Dymo.TaggerImpl.query_all_labels/{2,3}`.
+  See `Dymo.TaggerImpl.query_all_labels/3`.
   """
-  @callback query_all_labels(join_table, join_key) :: Query.t()
-  @callback query_all_labels(join_table, join_key, Tag.ns()) :: Query.t()
+  @callback query_all_labels(join_table, join_key, Tag.ns() | nil) :: Query.t()
 
   @doc """
   Generates query for retrieving labels associated with a schema's
@@ -54,8 +50,7 @@ defmodule Dymo.Tagger do
 
   See `Dymo.TaggerImpl.query_labels/{3,4}`.
   """
-  @callback query_labels(Schema.t(), join_table, join_key) :: Query.t()
-  @callback query_labels(Schema.t(), join_table, join_key, Tag.ns()) :: Query.t()
+  @callback query_labels(Schema.t(), join_table, join_key, Tag.ns() | nil) :: Query.t()
 
   @doc """
   Queries models that are tagged with the given labels.
@@ -77,28 +72,20 @@ defmodule Dymo.Tagger do
 
       alias Dymo.TaggerImpl
 
-      defdelegate set_labels(struct, label_or_labels), to: TaggerImpl
       defdelegate set_labels(struct, ns, label_or_labels), to: TaggerImpl
-
-      defdelegate add_labels(struct, label_or_labels), to: TaggerImpl
       defdelegate add_labels(struct, ns, label_or_labels), to: TaggerImpl
-
-      defdelegate remove_labels(struct, label_or_labels), to: TaggerImpl
       defdelegate remove_labels(struct, ns, label_or_labels), to: TaggerImpl
-
-      defdelegate query_all_labels(join_table, join_key), to: TaggerImpl
       defdelegate query_all_labels(join_table, join_key, ns), to: TaggerImpl
-
       defdelegate query_labels(struct, join_table, join_key), to: TaggerImpl
       defdelegate query_labels(struct, join_table, join_key, ns), to: TaggerImpl
 
       defdelegate query_labeled_with(module, label_or_labels, join_table, join_key),
         to: TaggerImpl
 
-      defoverridable set_labels: [2, 3],
-                     add_labels: [2, 3],
-                     remove_labels: [2, 3],
-                     query_all_labels: [2, 3],
+      defoverridable set_labels: 3,
+                     add_labels: 3,
+                     remove_labels: 3,
+                     query_all_labels: 3,
                      query_labels: [3, 4],
                      query_labeled_with: 4
     end

@@ -10,42 +10,21 @@ defmodule Dymo.TagTest do
   setup :label
 
   describe ".changeset/1" do
-    test "casts w/o namespace", %{label: label} do
-      cs =
-        %{label: label}
-        |> Tag.changeset()
-
+    test "casts", %{label: label} do
+      cs = %{label: label} |> Tag.changeset()
       assert label == Changeset.get_field(cs, :label)
-      assert [] == Changeset.get_field(cs, :ns)
+      assert :root == Changeset.get_field(cs, :ns)
     end
 
-    test "casts w/ namespace", %{label: label} do
-      cs =
-        label
-        |> Tag.changeset()
+    test "casts with namespace", %{label: label} do
+      cs = label |> Tag.changeset()
+      assert :root == Changeset.get_field(cs, :ns)
 
-      assert [] == Changeset.get_field(cs, :ns)
-
-      cs =
-        {:ns1, label}
-        |> Tag.changeset()
-
-      assert [:ns1] == Changeset.get_field(cs, :ns)
-
-      cs =
-        {[:ns1], label}
-        |> Tag.changeset()
-
-      assert [:ns1] == Changeset.get_field(cs, :ns)
-
-      cs =
-        {[:ns1, :ns2], label}
-        |> Tag.changeset()
-
-      assert [:ns1, :ns2] == Changeset.get_field(cs, :ns)
+      cs = {:ns1, label} |> Tag.changeset()
+      assert :ns1 == Changeset.get_field(cs, :ns)
     end
 
-    test "enforces label unicity", %{label: label} do
+    test "enforces label unicity constraints", %{label: label} do
       %{label: label}
       |> Tag.changeset()
       |> Repo.insert!()
@@ -59,7 +38,7 @@ defmodule Dymo.TagTest do
       assert match?({"has already been taken", _}, errors[:label])
     end
 
-    test "enforces label unicity per namespace", %{label: label} do
+    test "enforces label unicity constraints with namespaces", %{label: label} do
       %{label: label}
       |> Tag.changeset()
       |> Repo.insert!()
@@ -87,31 +66,53 @@ defmodule Dymo.TagTest do
   end
 
   describe ".find_or_create!/1" do
-    test "inserts the record when it doesn't exist", %{label: label} do
-      tag = Tag.find_or_create!(label)
+    test "inserts the tag when it doesn't exist", %{label: label} do
+      tag = label |> Tag.find_or_create!()
       assert %Tag{} = tag
       assert tag.id
       assert label == tag.label
     end
 
-    test "inserts the record when it doesn't exist, w/ namespaces", %{label: label} do
+    test "inserts the tag when it doesn't exist, w/ namespaces", %{label: label} do
       ns = :"#{:erlang.unique_integer()}"
       tag = Tag.find_or_create!({ns, label})
 
-      assert match?(%Tag{label: ^label, ns: [^ns]}, tag)
+      assert match?(%Tag{label: ^label, ns: ^ns}, tag)
     end
 
-    test "gets the record when it already exists", %{label: label} do
-      tag1 = Tag.find_or_create!(label)
-      tag2 = Tag.find_or_create!(label)
+    test "gets the tag when it already exists", %{label: label} do
+      tag1 = label |> Tag.find_or_create!()
+      tag2 = label |> Tag.find_or_create!()
       assert tag1 == tag2
     end
 
-    test "gets the record when it already exists, w/ namespaces", %{label: label} do
-      ns = [:"ns#{:erlang.unique_integer()}", :"ns#{:erlang.unique_integer()}"]
+    test "gets the namespaced tag when it already exists", %{label: label} do
+      tag1 = {:foo, label} |> Tag.find_or_create!()
+      tag2 = {:foo, label} |> Tag.find_or_create!()
+      assert tag1 == tag2
+    end
+  end
 
-      tag1 = Tag.find_or_create!({ns, label})
-      tag2 = Tag.find_or_create!({ns, label})
+  describe ".find_existing/1" do
+    test "doesn't insert the tag when it doesn't exist", %{label: label} do
+      tag = label |> Tag.find_existing()
+      assert tag == nil
+    end
+
+    test "doesn't insert the namespaced tag when it doesn't exist", %{label: label} do
+      tag = {:foo, label} |> Tag.find_existing()
+      assert tag == nil
+    end
+
+    test "gets the tag when it already exists", %{label: label} do
+      tag1 = label |> Tag.find_or_create!()
+      tag2 = label |> Tag.find_existing()
+      assert tag1 == tag2
+    end
+
+    test "gets the namespaced tag when it already exists", %{label: label} do
+      tag1 = {:foo, label} |> Tag.find_or_create!()
+      tag2 = {:foo, label} |> Tag.find_existing()
       assert tag1 == tag2
     end
   end

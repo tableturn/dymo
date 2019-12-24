@@ -2,7 +2,7 @@ defmodule Dymo.UUPost do
   @moduledoc false
 
   use Ecto.Schema
-  use Dymo.Taggable, join_table: "posts_tags"
+  use Dymo.Taggable, join_table: "taggings"
 
   alias Ecto.{Changeset, Schema}
 
@@ -10,10 +10,8 @@ defmodule Dymo.UUPost do
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "uuposts" do
     tags()
-
     field :title, :string
     field :body, :string
-
     timestamps()
   end
 
