@@ -14,8 +14,7 @@ defmodule Dymo.MixProject do
       homepage_url: "https://github.com/tableturn/dymo",
       dialyzer: [
         plt_add_deps: :project,
-        plt_add_apps: [:mix, :ecto],
-        ignore_warnings: ".dialyzer-ignore.exs"
+        plt_add_apps: [:mix, :ecto]
       ],
       docs: [extras: ~w(README.md)],
       test_coverage: [tool: ExCoveralls],
@@ -42,8 +41,8 @@ defmodule Dymo.MixProject do
       # Dev and Test only.
       {:postgrex, "~> 0.14", only: [:dev, :test]},
       # Dev only.
-      {:credo, "~> 0.10", only: :dev},
-      {:dialyxir, "~> 1.0.0-rc.6", only: :dev},
+      {:credo, "~> 1.1.0", only: :dev},
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.19", only: :dev},
       # Test only.
       {:excoveralls, "~> 0.8", only: :test},
