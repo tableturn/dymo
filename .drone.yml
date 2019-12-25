@@ -27,7 +27,7 @@ steps:
 
   # Run tests.
   - name: build
-    image: elixir:1.7
+    image: elixir:1.9
     commands:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=test mix do deps.get, coveralls.json
@@ -39,7 +39,7 @@ steps:
 
   # Check code formatting, linting and dialyze it using latest elixir.
   - name: checks
-    image: elixir:1.7
+    image: elixir:1.9
     commands:
       - mix do local.rebar --force, local.hex --force
       - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all
