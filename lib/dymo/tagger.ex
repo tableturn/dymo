@@ -13,51 +13,34 @@ defmodule Dymo.Tagger do
   @typedoc "A join key is an atom."
   @type join_key :: atom
 
-  @doc """
-  Adds labels to a given instance of a model.
+  @doc "See `Dymo.TaggerImpl.add_labels/{2,3}`."
+  @callback add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.add_labels/{2,3}`."
+  @callback add_labels(Schema.t(), Tag.label_or_labels(), keyword) :: Schema.t()
 
-  See `Dymo.TaggerImpl.add_labels/3`.
-  """
-  @callback add_labels(Schema.t(), Tag.ns() | nil, Tag.string_or_strings()) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.set_labels/3`."
+  @callback set_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.set_labels/3`."
+  @callback set_labels(Schema.t(), Tag.label_or_labels(), keyword) :: Schema.t()
 
-  @doc """
-  Sets the labels associated with an instance of a model.
+  @doc "See `Dymo.TaggerImpl.remove_labels/3`."
+  @callback remove_labels(Schema.t(), Tag.string_or_strings()) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.remove_labels/3`."
+  @callback remove_labels(Schema.t(), Tag.string_or_strings(), keyword) :: Schema.t()
 
-  If any other labels are associated to the given model, they are
-  discarded if they are not part of the list of passed new labels.
+  @doc "See `Dymo.TaggerImpl.labels/{3,4}`."
+  @callback labels(Schema.t(), join_table, join_key) :: Query.t()
+  @doc "See `Dymo.TaggerImpl.labels/{3,4}`."
+  @callback labels(Schema.t(), join_table, join_key, keyword) :: Query.t()
 
-  See `Dymo.TaggerImpl.set_labels/3`.
-  """
-  @callback set_labels(Schema.t(), Tag.ns() | nil, Tag.string_or_strings()) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.all_labels/3`."
+  @callback all_labels(join_table, join_key) :: Query.t()
+  @doc "See `Dymo.TaggerImpl.all_labels/3`."
+  @callback all_labels(join_table, join_key, keyword) :: Query.t()
 
-  @doc """
-  Removes labels from a given instance of a model.
-
-  See `Dymo.TaggerImpl.remove_labels/3`.
-  """
-  @callback remove_labels(Schema.t(), Tag.ns(), Tag.string_or_strings()) :: Schema.t()
-
-  @doc """
-  Generates query for retrieving labels associated with a schema.
-
-  See `Dymo.TaggerImpl.query_all_labels/3`.
-  """
-  @callback query_all_labels(join_table, join_key, Tag.ns() | nil) :: Query.t()
-
-  @doc """
-  Generates query for retrieving labels associated with a schema's
-  instance.
-
-  See `Dymo.TaggerImpl.query_labels/{3,4}`.
-  """
-  @callback query_labels(Schema.t(), join_table, join_key, Tag.ns() | nil) :: Query.t()
-
-  @doc """
-  Queries models that are tagged with the given labels.
-
-  See `Dymo.query_labeled_with.query_labels/4`.
-  """
-  @callback query_labeled_with(module, Tag.label_or_labels(), join_table, join_key) :: Query.t()
+  @doc "See `Dymo.labeled_with.labels/4`."
+  @callback labeled_with(module, Tag.label_or_labels(), join_table, join_key) ::
+              Query.t()
 
   @doc """
   Use this module to implements alternative `Ecto.Tagger`
@@ -69,25 +52,25 @@ defmodule Dymo.Tagger do
       @behaviour Dymo.Tagger
 
       import Ecto.Query
-
       alias Dymo.TaggerImpl
 
-      defdelegate set_labels(struct, ns, label_or_labels), to: TaggerImpl
-      defdelegate add_labels(struct, ns, label_or_labels), to: TaggerImpl
-      defdelegate remove_labels(struct, ns, label_or_labels), to: TaggerImpl
-      defdelegate query_all_labels(join_table, join_key, ns), to: TaggerImpl
-      defdelegate query_labels(struct, join_table, join_key), to: TaggerImpl
-      defdelegate query_labels(struct, join_table, join_key, ns), to: TaggerImpl
+      defdelegate labels(struct, join_table, join_key, opts \\ []), to: TaggerImpl
+      defdelegate add_labels(struct, label_or_labels, opts \\ []), to: TaggerImpl
+      defdelegate set_labels(struct, label_or_labels, opts \\ []), to: TaggerImpl
+      defdelegate remove_labels(struct, label_or_labels, opts \\ []), to: TaggerImpl
 
-      defdelegate query_labeled_with(module, label_or_labels, join_table, join_key),
+      defdelegate all_labels(join_table, join_key, ns), to: TaggerImpl
+
+      defdelegate labeled_with(module, label_or_labels, join_table, join_key),
         to: TaggerImpl
 
-      defoverridable set_labels: 3,
-                     add_labels: 3,
-                     remove_labels: 3,
-                     query_all_labels: 3,
-                     query_labels: [3, 4],
-                     query_labeled_with: 4
+      defoverridable labels: [3, 4],
+                     add_labels: [2, 3],
+                     set_labels: [2, 3],
+                     remove_labels: [2, 3],
+                     labels: 4,
+                     all_labels: 3,
+                     labeled_with: 4
     end
   end
 
