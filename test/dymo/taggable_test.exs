@@ -5,12 +5,12 @@ defmodule Dymo.TaggableTest do
   defmodule TestTagger do
     @behaviour Tagger
 
-    def set_labels(s, _ns, lls, _ \\ []), do: {s, lls}
-    def add_labels(s, _ns, lls, _ \\ []), do: {s, lls}
-    def remove_labels(s, _ns, lls), do: {s, lls}
-    def query_all_labels(jt, jk, _ns), do: {jt, jk}
-    def query_labels(s, jt, jk, _ns), do: {s, jt, jk}
-    def query_labeled_with(m, tags, jt, jk), do: {m, tags, jt, jk}
+    def add_labels(s, lls, opts \\ []), do: {s, lls, opts}
+    def set_labels(s, lls, opts \\ []), do: {s, lls, opts}
+    def remove_labels(s, lls, opts \\ []), do: {s, lls, opts}
+    def all_labels(jt, jk, opts \\ []), do: {jt, jk, opts}
+    def labels(s, jt, jk, opts \\ []), do: {s, jt, jk, opts}
+    def labeled_with(m, tags, jt, jk), do: {m, tags, jt, jk}
   end
 
   defmodule Dummy do
@@ -39,32 +39,40 @@ defmodule Dymo.TaggableTest do
   describe "degates behaviour" do
     @join_table "dummies_tags"
     @join_id :dummy_id
-    @t "hello"
+    @label {:hey, "Hoy"}
 
     setup :taggable
 
-    test ".add_labels/3", %{taggable: taggable} do
-      assert {taggable, @t} == taggable |> Taggable.add_labels(nil, @t)
+    test ".add_labels/{2,3}", %{taggable: taggable} do
+      assert {taggable, @label, []} ==
+               taggable |> Taggable.add_labels(@label)
+
+      assert {taggable, {:baz, @label}, []} ==
+               taggable |> Taggable.add_labels({:baz, @label})
     end
 
-    test ".set_labels/3", %{taggable: taggable} do
-      assert {taggable, @t} == taggable |> Taggable.set_labels(nil, @t)
+    test ".set_labels/{3,4}", %{taggable: taggable} do
+      assert {taggable, @label, []} ==
+               taggable |> Taggable.set_labels(@label)
+
+      assert {taggable, {:ns1, @label}, [foo: :baz]} ==
+               taggable |> Taggable.set_labels({:ns1, @label}, foo: :baz)
     end
 
-    test ".remove_labels/2", %{taggable: taggable} do
-      assert {taggable, @t} == taggable |> Taggable.remove_labels(nil, @t)
+    test ".remove_labels/{2,3}", %{taggable: taggable} do
+      assert {taggable, @label, []} == taggable |> Taggable.remove_labels(@label)
     end
 
-    test ".all_labels/2" do
-      assert {"dummies_tags", :dummy_id} == Dummy |> Taggable.all_labels(nil)
+    test ".all_labels/{2,3}" do
+      assert {"dummies_tags", :dummy_id, []} == Dummy |> Taggable.all_labels()
     end
 
-    test ".labels/1", %{taggable: taggable} do
-      assert {taggable, @join_table, @join_id} == taggable |> Taggable.labels(nil)
+    test ".labels/{1,2}", %{taggable: taggable} do
+      assert {taggable, @join_table, @join_id, []} == taggable |> Taggable.labels()
     end
 
     test ".labeled_with/2" do
-      assert {Dummy, @t, @join_table, :dummy_id} == Dummy |> Taggable.labeled_with(@t)
+      assert {Dummy, "Hey", @join_table, :dummy_id} == Dummy |> Taggable.labeled_with("Hey")
     end
   end
 

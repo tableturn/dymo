@@ -1,5 +1,6 @@
 defmodule Dymo.TaggerTest do
   use ExUnit.Case, async: true
+
   alias Dymo.Tagger
   doctest Tagger, include: true
 
