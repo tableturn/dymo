@@ -13,25 +13,25 @@ defmodule Dymo.Tagger do
   @typedoc "A join key is an atom."
   @type join_key :: atom
 
-  @doc "See `Dymo.TaggerImpl.add_labels/{2,3}`."
-  @callback add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
-  @doc "See `Dymo.TaggerImpl.add_labels/{2,3}`."
-  @callback add_labels(Schema.t(), Tag.label_or_labels(), keyword) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.labels/{3,4}`."
+  @callback labels(Schema.t(), join_table, join_key) :: Query.t()
+  @doc "See `Dymo.TaggerImpl.labels/{3,4}`."
+  @callback labels(Schema.t(), join_table, join_key, keyword) :: Query.t()
 
   @doc "See `Dymo.TaggerImpl.set_labels/3`."
   @callback set_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
   @doc "See `Dymo.TaggerImpl.set_labels/3`."
   @callback set_labels(Schema.t(), Tag.label_or_labels(), keyword) :: Schema.t()
 
-  @doc "See `Dymo.TaggerImpl.remove_labels/3`."
-  @callback remove_labels(Schema.t(), Tag.string_or_strings()) :: Schema.t()
-  @doc "See `Dymo.TaggerImpl.remove_labels/3`."
-  @callback remove_labels(Schema.t(), Tag.string_or_strings(), keyword) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.add_labels/{2,3}`."
+  @callback add_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.add_labels/{2,3}`."
+  @callback add_labels(Schema.t(), Tag.label_or_labels(), keyword) :: Schema.t()
 
-  @doc "See `Dymo.TaggerImpl.labels/{3,4}`."
-  @callback labels(Schema.t(), join_table, join_key) :: Query.t()
-  @doc "See `Dymo.TaggerImpl.labels/{3,4}`."
-  @callback labels(Schema.t(), join_table, join_key, keyword) :: Query.t()
+  @doc "See `Dymo.TaggerImpl.remove_labels/3`."
+  @callback remove_labels(Schema.t(), Tag.label_or_labels()) :: Schema.t()
+  @doc "See `Dymo.TaggerImpl.remove_labels/3`."
+  @callback remove_labels(Schema.t(), Tag.label_or_labels(), keyword) :: Schema.t()
 
   @doc "See `Dymo.TaggerImpl.all_labels/3`."
   @callback all_labels(join_table, join_key) :: Query.t()
@@ -40,6 +40,9 @@ defmodule Dymo.Tagger do
 
   @doc "See `Dymo.labeled_with.labels/4`."
   @callback labeled_with(module, Tag.label_or_labels(), join_table, join_key) ::
+              Query.t()
+  @doc "See `Dymo.labeled_with.labels/4`."
+  @callback labeled_with(module, Tag.label_or_labels(), join_table, join_key, keyword) ::
               Query.t()
 
   @doc """
@@ -55,22 +58,21 @@ defmodule Dymo.Tagger do
       alias Dymo.TaggerImpl
 
       defdelegate labels(struct, join_table, join_key, opts \\ []), to: TaggerImpl
-      defdelegate add_labels(struct, label_or_labels, opts \\ []), to: TaggerImpl
       defdelegate set_labels(struct, label_or_labels, opts \\ []), to: TaggerImpl
+      defdelegate add_labels(struct, label_or_labels, opts \\ []), to: TaggerImpl
       defdelegate remove_labels(struct, label_or_labels, opts \\ []), to: TaggerImpl
 
-      defdelegate all_labels(join_table, join_key, ns), to: TaggerImpl
+      defdelegate all_labels(join_table, join_key, opts \\ []), to: TaggerImpl
 
-      defdelegate labeled_with(module, label_or_labels, join_table, join_key),
+      defdelegate labeled_with(module, label_or_labels, join_table, join_key, opts \\ []),
         to: TaggerImpl
 
       defoverridable labels: [3, 4],
-                     add_labels: [2, 3],
                      set_labels: [2, 3],
+                     add_labels: [2, 3],
                      remove_labels: [2, 3],
-                     labels: 4,
-                     all_labels: 3,
-                     labeled_with: 4
+                     all_labels: [2, 3],
+                     labeled_with: [4, 5]
     end
   end
 

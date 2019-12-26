@@ -73,6 +73,12 @@ defmodule Dymo.Tag.Ns do
   def cast(_),
     do: :error
 
+  @spec cast!(nil | String.t() | t) :: t
+  def cast!(value) do
+    {:ok, ret} = value |> cast()
+    ret
+  end
+
   @doc """
   We use `load/1` to load data from the database into a normalized form,
   very much like how `cast/1` loads data from the outside world.
