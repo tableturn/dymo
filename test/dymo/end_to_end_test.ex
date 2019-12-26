@@ -1,6 +1,7 @@
 defmodule Dymo.EndToEndTest do
   use Dymo.DataCase, async: false
   alias Dymo.{Repo, Taggable, Post}
+  import Ecto.Query
 
   setup do
     posts =
@@ -107,6 +108,35 @@ defmodule Dymo.EndToEndTest do
     assert ["b1", "b2", "b3", "b4"] == Post |> Taggable.all_labels(ns: :b) |> Repo.all()
     assert ["c1"] == Post |> Taggable.all_labels(ns: :c) |> Repo.all()
     assert ["d1", "d3"] == Post |> Taggable.all_labels(ns: :d) |> Repo.all()
+
+    # Get posts tagged with certain tags.
+    assert [p1.id, p2.id] ==
+             Post
+             |> Taggable.labeled_with({:a, "a1"})
+             |> select([t], t.id)
+             |> order_by([t], t.id)
+             |> Repo.all()
+
+    assert [p1.id, p2.id] ==
+             Post
+             |> Taggable.labeled_with(["r2", "r3"])
+             |> select([t], t.id)
+             |> order_by([t], t.id)
+             |> Repo.all()
+
+    assert [p1.id] ==
+             Post
+             |> Taggable.labeled_with([{:a, "a3"}, {:b, "b3"}, {:b, "b4"}])
+             |> select([t], t.id)
+             |> order_by([t], t.id)
+             |> Repo.all()
+
+    assert [p2.id] ==
+             Post
+             |> Taggable.labeled_with({:b, "b1"})
+             |> select([t], t.id)
+             |> order_by([t], t.id)
+             |> Repo.all()
   end
 
   defp tuppleify(labels, ns) when is_list(labels),
