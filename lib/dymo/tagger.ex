@@ -97,7 +97,7 @@ defmodule Dymo.Tagger do
       module
       |> singularize
       |> Inflex.pluralize()
-      |> (fn plural -> "#{plural}_tags" end).()
+      |> (&"#{&1}_tags").()
 
   @doc """
   A helper function that helps computing the field name to use
