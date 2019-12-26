@@ -58,13 +58,13 @@ defmodule Dymo.Taggable do
         def labels(taggable, opts \\ []),
           do: unquote(impl).labels(taggable, unquote(join_table), unquote(join_key), opts)
 
-        @spec add_labels(Dymo.Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
-        def add_labels(taggable, labels, opts \\ []),
-          do: unquote(impl).add_labels(taggable, labels, opts)
-
         @spec set_labels(Dymo.Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
         def set_labels(taggable, labels, opts \\ []),
           do: unquote(impl).set_labels(taggable, labels, opts)
+
+        @spec add_labels(Dymo.Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
+        def add_labels(taggable, labels, opts \\ []),
+          do: unquote(impl).add_labels(taggable, labels, opts)
 
         @spec remove_labels(Dymo.Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
         def remove_labels(taggable, labels, opts \\ []),
@@ -75,14 +75,15 @@ defmodule Dymo.Taggable do
       def all_labels(opts \\ []),
         do: unquote(impl).all_labels(unquote(join_table), unquote(join_key), opts)
 
-      @spec labeled_with(Tag.label_or_labels()) :: Query.t()
-      def labeled_with(label_or_labels),
+      @spec labeled_with(Tag.label_or_labels(), keyword) :: Query.t()
+      def labeled_with(label_or_labels, opts \\ []),
         do:
           unquote(impl).labeled_with(
             __MODULE__,
             label_or_labels,
             unquote(join_table),
-            unquote(join_key)
+            unquote(join_key),
+            opts
           )
     end
   end
@@ -109,13 +110,13 @@ defmodule Dymo.Taggable do
   @spec labels(t(), keyword) :: Query.t()
   defdelegate labels(taggable, opts \\ []), to: Protocol
 
-  @doc "Adds labels to the given namespace."
-  @spec add_labels(t(), Tag.label_or_labels(), keyword) :: Schema.t()
-  defdelegate add_labels(taggable, lbls, opts \\ []), to: Protocol
-
   @doc "Sets all labels with the given namespace, replacing existing ones."
   @spec set_labels(t(), Tag.label_or_labels(), keyword) :: Schema.t()
   defdelegate set_labels(taggable, lbls, opts \\ []), to: Protocol
+
+  @doc "Adds labels to the given namespace."
+  @spec add_labels(t(), Tag.label_or_labels(), keyword) :: Schema.t()
+  defdelegate add_labels(taggable, lbls, opts \\ []), to: Protocol
 
   @doc "Remove labels from the given namespace."
   @spec remove_labels(t(), Tag.label_or_labels(), keyword) :: Schema.t()
@@ -126,6 +127,6 @@ defmodule Dymo.Taggable do
   def all_labels(module, opts \\ []), do: module.all_labels(opts)
 
   @doc "Returns all objects of given type labeled with given labels."
-  @spec labeled_with(module, Tag.label_or_labels()) :: Query.t()
-  def labeled_with(module, tags), do: module.labeled_with(tags)
+  @spec labeled_with(module, Tag.label_or_labels(), keyword) :: Query.t()
+  def labeled_with(module, tags, opts \\ []), do: module.labeled_with(tags, opts)
 end

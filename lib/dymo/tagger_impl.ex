@@ -16,6 +16,82 @@ defmodule Dymo.TaggerImpl do
   @type join_key :: Tagger.join_key()
 
   @doc """
+  Generates query for retrieving labels associated with a schema's
+  instance.
+  """
+  @impl Tagger
+  @spec labels(Taggable.t(), join_table, join_key, keyword) :: Query.t()
+  def labels(%{__struct__: schema, tags: _} = struct, jt, jk, opts \\ [])
+      when is_binary(jt) and is_atom(jk) do
+    cast_ns =
+      opts
+      |> Keyword.get(:ns, nil)
+      |> Ns.cast!()
+
+    Tag
+    |> join_taggings(pkey_type(schema), struct, jt, jk)
+    |> where([t], t.ns == ^cast_ns)
+    |> distinct([t, tg], t.label)
+    |> select([t, tg], t.label)
+  end
+
+  @doc """
+  Sets the labels associated with an instance of a model, for the
+  given namespace.
+
+  If any other labels are associated to the given model and namespace,
+  they are discarded if they are not part of the list of passed new
+  labels.
+
+  ## Examples
+
+      iex> post = %Dymo.Post{title: "Hey"}
+      ...>  |> Dymo.repo().insert!
+      iex> post
+      ...>  |> TaggerImpl.set_labels([{:rank, "one"}, {:rank, "two"}])
+      ...>  |> Map.get(:tags)
+      ...>  |> Enum.map(& {&1.ns, &1.label})
+      [{:rank, "one"}, {:rank, "two"}]
+      iex> post
+      ...>  |> TaggerImpl.set_labels({:rank, "officer"})
+      ...>  |> Map.get(:tags)
+      ...>  |> Enum.map(& {&1.ns, &1.label})
+      [{:rank, "officer"}]
+  """
+  @impl Tagger
+  @spec set_labels(Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
+  def set_labels(struct, lbls, opts \\ [])
+
+  def set_labels(%{tags: %NotLoaded{}} = struct, lbls, opts),
+    do:
+      struct
+      |> Dymo.repo().preload(:tags)
+      |> set_labels(lbls, opts)
+
+  def set_labels(%{id: _, tags: tags} = struct, label_or_labels, opts) do
+    default_ns =
+      opts
+      |> Keyword.get(:ns)
+      |> Ns.cast!()
+
+    label_or_labels
+    # Make the labels a list if not one.
+    |> List.wrap()
+    # Transform each label into a {ns, label} tupple.
+    |> tuppleify(default_ns)
+    # Create a map of ns => [label].
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    # Replace tags with new one by overwritting existing namespaces.
+    |> Enum.reduce(group_labels_by_namespace(tags), fn {ns, labels}, acc ->
+      acc |> Map.put(ns, labels)
+    end)
+    # From a map get back into an array.
+    |> groupped_labels_to_list()
+    # Commit.
+    |> maintain_labels_tags(struct, opts)
+  end
+
+  @doc """
   Adds labels to a given instance of a model.
 
   ## Examples
@@ -40,19 +116,21 @@ defmodule Dymo.TaggerImpl do
       |> add_labels(lbls, opts)
 
   def add_labels(%{id: _, tags: tags} = struct, lbls, opts) do
+    # Get the optional namespace, or default it.
+    default_ns = opts |> Keyword.get(:ns) |> Ns.cast!()
     # Prepare a lookup table of the existing tags. For this, we make
     # a map such as %{{ns, label} => true}
     existing_tags =
       tags
       |> Enum.reduce(%{}, fn lbl, acc ->
-        acc |> Map.put(Tag.tuppleify(lbl), true)
+        acc |> Map.put(tuppleify(lbl, default_ns), true)
       end)
 
     lbls
     # Make the labels a list if not one.
     |> List.wrap()
     # Transform every label into a {ns, label} tupple.
-    |> Enum.map(&Tag.tuppleify/1)
+    |> tuppleify(default_ns)
     # Remove the ones that are already present.
     |> Enum.reject(&Map.get(existing_tags, &1))
     # Add the existing ones.
@@ -60,51 +138,6 @@ defmodule Dymo.TaggerImpl do
     # Commit.
     |> maintain_labels_tags(struct, opts)
   end
-
-  @doc """
-  Sets the labels associated with an instance of a model, for the
-  given namespace.
-
-  If any other labels are associated to the given model and namespace,
-  they are discarded if they are not part of the list of passed new
-  labels.
-
-  ## Examples
-
-      iex> post = %Dymo.Post{title: "Hey"}
-      iex> %{tags: tags} = post
-      ...>  |> Dymo.repo().insert!
-      ...>  |> TaggerImpl.set_labels([{:rank, "one"}, {:rank, "two"}])
-      iex> Enum.map(tags, & &1.label)
-      ["one", "two"]
-  """
-  @impl Tagger
-  @spec set_labels(Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
-  def set_labels(struct, lbls, opts \\ [])
-
-  def set_labels(%{tags: %NotLoaded{}} = struct, lbls, opts),
-    do:
-      struct
-      |> Dymo.repo().preload(:tags)
-      |> set_labels(lbls, opts)
-
-  def set_labels(%{id: _, tags: tags} = struct, lbls, opts),
-    do:
-      lbls
-      # Make the labels a list if not one.
-      |> List.wrap()
-      # Transform each label into a {ns, label} tupple.
-      |> Enum.map(&Tag.tuppleify/1)
-      # Create a map of ns => [label].
-      |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-      # Replace tags with new one by overwritting existing namespaces.
-      |> Enum.reduce(group_by_ns(tags), fn {ns, labels}, acc ->
-        acc |> Map.put(ns, labels)
-      end)
-      # From a map get back into an array.
-      |> flatten()
-      # Commit.
-      |> maintain_labels_tags(struct, opts)
 
   @doc """
   Removes labels from a given instance of a model.
@@ -119,7 +152,7 @@ defmodule Dymo.TaggerImpl do
       ["seven"]
   """
   @impl Tagger
-  @spec remove_labels(Taggable.t(), Tag.string_or_strings(), keyword) :: Schema.t()
+  @spec remove_labels(Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
   def remove_labels(struct, lbls, opts \\ [])
 
   def remove_labels(%{tags: %NotLoaded{}} = struct, lbls, opts),
@@ -128,42 +161,25 @@ defmodule Dymo.TaggerImpl do
       |> Dymo.repo().preload(:tags)
       |> remove_labels(lbls, opts)
 
-  def remove_labels(%{id: _, tags: tags} = struct, lbls, _opts),
-    do:
-      lbls
-      # Make the labels a list if not one.
-      |> List.wrap()
-      # Transform every label into a {ns, label} tupple.
-      |> Enum.map(&Tag.tuppleify/1)
-      # Create a map of ns => [label].
-      |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
-      # Remove from existing tags.
-      |> Enum.reduce(group_by_ns(tags), fn {ns, labels}, acc ->
-        acc |> Map.update(ns, [], &(&1 -- labels))
-      end)
-      # Transform back into an array.
-      |> flatten
-      # Commit.
-      |> maintain_labels_tags(struct)
+  def remove_labels(%{id: _, tags: tags} = struct, lbls, opts) do
+    # Get the optional namespace or default it.
+    default_ns = opts |> Keyword.get(:ns) |> Ns.cast!()
 
-  @doc """
-  Generates query for retrieving labels associated with a schema's
-  instance.
-  """
-  @impl Tagger
-  @spec labels(Taggable.t(), join_table, join_key, keyword) :: Query.t()
-  def labels(%{__struct__: schema, tags: _} = struct, jt, jk, opts \\ [])
-      when is_binary(jt) and is_atom(jk) do
-    {:ok, cast_ns} =
-      opts
-      |> Keyword.get(:ns, nil)
-      |> Ns.cast()
-
-    Tag
-    |> join_tagging(pkey_type(schema), struct, jt, jk)
-    |> where([t], t.ns == ^cast_ns)
-    |> distinct([t, tg], t.label)
-    |> select([t, tg], t.label)
+    lbls
+    # Make the labels a list if not one.
+    |> List.wrap()
+    # Transform every label into a {ns, label} tupple.
+    |> tuppleify(default_ns)
+    # Create a map of ns => [label].
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    # Remove from existing tags.
+    |> Enum.reduce(group_labels_by_namespace(tags), fn {ns, labels}, acc ->
+      acc |> Map.update(ns, [], &(&1 -- labels))
+    end)
+    # Transform back into an array.
+    |> groupped_labels_to_list
+    # Commit.
+    |> maintain_labels_tags(struct, opts)
   end
 
   @doc """
@@ -183,10 +199,10 @@ defmodule Dymo.TaggerImpl do
   @spec all_labels(join_table, join_key, keyword) :: Query.t()
   def all_labels(jt, jk, opts \\ [])
       when is_binary(jt) and is_atom(jk) do
-    {:ok, cast_ns} =
+    cast_ns =
       opts
-      |> Keyword.get(:ns, nil)
-      |> Ns.cast()
+      |> Keyword.get(:ns)
+      |> Ns.cast!()
 
     Tag
     |> join(:left, [t], tg in ^jt, on: t.id == tg.tag_id)
@@ -216,35 +232,55 @@ defmodule Dymo.TaggerImpl do
       []
   """
   @impl Tagger
-  @spec labeled_with(module, Tag.label_or_labels(), join_table(), join_key()) ::
+  @spec labeled_with(module, Tag.label_or_labels(), join_table(), join_key(), keyword) ::
           Query.t()
-  def labeled_with(module, label_or_labels, jt, jk)
+  def labeled_with(module, label_or_labels, jt, jk, opts \\ [])
       when is_binary(jt) and is_atom(jk) do
-    {nss, lbls} =
+    default_ns =
+      opts
+      |> Keyword.get(:ns)
+      |> Ns.cast!()
+
+    labels =
       label_or_labels
       |> List.wrap()
-      |> Enum.map(&Tag.cast/1)
-      |> Enum.reduce({[], []}, fn
-        tag, {nss, lbls} -> {[tag.ns | nss], [tag.label | lbls]}
+      |> tuppleify(default_ns)
+
+    frag =
+      labels
+      |> Enum.reduce(false, fn {ns, lbl}, acc ->
+        dynamic([m, tg, t], ^acc or (t.ns == ^ns and t.label == ^lbl))
       end)
 
-    # TODO: This query is most likelly wrong - because it requires
-    # "label in a list and namespace in a list" and it mixes things.
-    # The right way to do this would be to accumulate a where fragment in
-    # a loop.
     module
     |> join(:inner, [m], tg in ^jt, on: m.id == field(tg, ^jk))
     |> join(:inner, [m, tg], t in Tag, on: t.id == tg.tag_id)
-    |> where([m, tg, t], t.ns in ^nss and t.label in ^lbls)
+    |> where(^frag)
     |> group_by([m, tg, t], m.id)
-    |> having([m, tg, t], count(field(tg, ^jk)) == ^length(lbls))
     |> order_by([m, tg, t], asc: m.inserted_at)
   end
 
-  @spec maintain_labels_tags([Tag.t()], Taggable.t(), keyword) :: Schema.t()
-  defp maintain_labels_tags(tags, struct, opts \\ []) do
+  @spec tuppleify(Tag.label() | Tag.t() | [Tag.label() | Tag.t()], Ns.t()) ::
+          Tag.namespaced_label()
+  defp tuppleify(lbls, default_ns) when is_list(lbls),
+    do: lbls |> Enum.map(&tuppleify(&1, default_ns))
+
+  defp tuppleify(lbl, default_ns) when is_binary(lbl),
+    do: tuppleify({default_ns, lbl}, default_ns)
+
+  defp tuppleify({nil, lbl}, default_ns),
+    do: {Ns.cast!(default_ns), lbl}
+
+  defp tuppleify({ns, lbl}, _),
+    do: {Ns.cast!(ns), lbl}
+
+  defp tuppleify(%{ns: ns, label: lbl}, default_ns),
+    do: tuppleify({ns, lbl}, default_ns)
+
+  @spec maintain_labels_tags(list(Tag.t()), Taggable.t(), keyword) :: Schema.t()
+  defp maintain_labels_tags(tags, struct, opts) do
     # Based on options, we might want to skip creation of non-existent tags.
-    method =
+    finder_or_creator =
       opts
       |> Keyword.get(:create_missing, true)
       |> if do
@@ -256,7 +292,7 @@ defmodule Dymo.TaggerImpl do
     # Find the specified tags (create them if options allow that).
     safe_tags =
       tags
-      |> method.()
+      |> finder_or_creator.()
       |> Enum.filter(&(&1 != nil))
 
     # Update assocs.
@@ -266,10 +302,10 @@ defmodule Dymo.TaggerImpl do
     |> Dymo.repo().update!()
   end
 
-  defp group_by_ns(tags) when is_list(tags),
+  defp group_labels_by_namespace(tags) when is_list(tags),
     do: tags |> Enum.group_by(& &1.ns, & &1.label)
 
-  defp flatten(tags) when is_map(tags),
+  defp groupped_labels_to_list(tags) when is_map(tags),
     do:
       tags
       |> Enum.reduce([], fn {ns, lbls}, acc ->
@@ -278,17 +314,15 @@ defmodule Dymo.TaggerImpl do
         |> Enum.concat(acc)
       end)
 
-  defp join_tagging(q, [:id], %{id: id}, jt, jk),
-    do: join(q, :inner, [t], tg in ^jt, on: t.id == tg.tag_id and field(tg, ^jk) == ^id)
-
-  defp join_tagging(q, [:binary_id], %{id: id}, jt, jk),
+  defp join_taggings(q, [pk_type], %{id: id}, jt, jk) when pk_type in ~w(id binary_id)a,
     do:
-      join(q, :inner, [t], tg in ^jt,
-        on: t.id == tg.tag_id and field(tg, ^jk) == type(^id, :binary_id)
+      q
+      |> join(:inner, [t], tg in ^jt,
+        on: t.id == tg.tag_id and field(tg, ^jk) == type(^id, ^pk_type)
       )
 
-  defp join_tagging(_, _, _, _, _),
-    do: raise("#{__MODULE__} only supports `[:id]` and `[:binary_id]` primary key types.")
+  defp join_taggings(_, pk_types, _, _, _),
+    do: raise("#{__MODULE__} does not support #{inspect(pk_types)} as primary key type.")
 
   defp pkey_type(schema),
     do:

@@ -17,23 +17,17 @@ defmodule Dymo.Tag do
   @typedoc "Defines simple tags identified by a unique label."
   @type t :: %__MODULE__{}
 
-  @typedoc "Maps to `Ns.t()`."
-  @type ns :: Ns.t()
-  @typedoc "Defines a string or a list of strings."
-  @type string_or_strings :: raw_label | [raw_label]
   @typedoc "Defines a namespaced label."
-  @type raw_label :: String.t()
-  @typedoc "Defines a namespaced label."
-  @type namespaced_label :: {ns, raw_label}
+  @type namespaced_label :: {Ns.t(), String.t()}
   @typedoc "Defines a tag's label, namespaced or not."
-  @type label :: raw_label | namespaced_label
+  @type label :: String.t() | namespaced_label
   @typedoc "Defines a single flat label or a list of labels, namespaced or not."
   @type label_or_labels :: label | [label]
 
   @typedoc "Defines attributes for building this model's changeset"
   @type attrs :: %{
-          optional(:ns) => ns,
-          required(:label) => raw_label
+          optional(:ns) => Ns.t(),
+          required(:label) => String.t()
         }
 
   schema "tags" do
@@ -42,15 +36,6 @@ defmodule Dymo.Tag do
     field :ns, Ns, default: Ns.root_namespace()
     timestamps()
   end
-
-  @spec tuppleify(label | t) :: namespaced_label
-  def tuppleify({ns, lbl}) do
-    {:ok, cast_ns} = Ns.cast(ns)
-    {cast_ns, lbl}
-  end
-
-  def tuppleify(%{ns: ns, label: lbl}), do: tuppleify({ns, lbl})
-  def tuppleify(lbl) when is_binary(lbl), do: tuppleify({Ns.root_namespace(), lbl})
 
   @doc """
   Makes a changeset suited to manipulate the `Tag` model.
