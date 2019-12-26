@@ -5,6 +5,7 @@ defmodule Dymo.UUPost do
   use Dymo.Taggable, join_table: "taggings"
 
   alias Ecto.{Changeset, Schema}
+  import Ecto.Changeset
 
   @type t :: %__MODULE__{}
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -15,10 +16,13 @@ defmodule Dymo.UUPost do
     timestamps()
   end
 
+  @spec struct :: t()
+  def struct, do: %__MODULE__{}
+
   @spec changeset(t | Changeset.t(), map) :: Ecto.Changeset.t()
   def changeset(struct, attrs),
     do:
       struct
-      |> Changeset.cast(attrs, [:title, :body])
-      |> Changeset.validate_required([:title])
+      |> cast(attrs, [:title, :body])
+      |> validate_required([:title])
 end
