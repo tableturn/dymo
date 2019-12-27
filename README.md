@@ -87,7 +87,10 @@ bellow assyme that a `Post` module calls `use Dymo.Taggable`.
 To set the tags on an instance of a post:
 
 ```elixir
-Post.set_labels(post, nil, ~w(ten eleven))
+post
+  |> Taggable.set_labels(~w(ten eleven), ns: :number)
+  |> Taggable.set_labels([{:car, "Fort"}, {:color, "blue"}])
+  |> Taggable.set_labels("Heineken", ns: :beer)
 ```
 
 Similarily, you can add / remove labels using `Post.add_labels` and `Post.remove_labels`.
@@ -96,8 +99,10 @@ You can also force labelling to only use existing tags (avoid on-the-fly creatio
 passing appropriate options. For example:
 
 ````elixir
-post |> Post.set_labels(nil, ~w(ten eleven), create_missing: false)
-post |> Post.add_labels("Whatever", create_missing: false)
+post
+  |> Taggable.set_labels(~w(ten twelve), ns: :number, create_missing: false)
+  |> Taggable.add_labels("Pierre", ns: :name, create_missing: false)
+  |> Taggable
 ``
 
 ### Querying Labels
@@ -118,15 +123,16 @@ Using the helper function:
 
 ```elixir
 post
-  |> Post.labels()
+  |> Taggable.labels()
 ```
-
-Note that the `Post.labels/1` also accepts a module directly as an input - in that case it would return all labels that were ever associated with all posts.
 
 You can also query models that are tagged with specific labels by doing the following:
 
 ```elixir
-Post.labelled_with(~w(ten eleven))
+# Match posts tagged with at least *one* of the tags.
+Post |> Taggable.labelled_with(~w(ten eleven))
+# Match posts tagged with at least *all* the specified tags.
+Post |> Taggable.labelled_with([{:color, "blue"}, {"Heineken", :beer}], match_all: true)
 ```
 
 ## Notes
