@@ -255,6 +255,7 @@ defmodule Dymo.TaggerImpl do
   end
 
   defp labeled_with_any(module, labels, jt, jk) do
+    # Get a fragment that ORs all the labels.
     frag =
       labels
       |> Enum.reduce(false, fn {ns, lbl}, acc ->
@@ -265,25 +266,25 @@ defmodule Dymo.TaggerImpl do
     |> join(:inner, [m], tg in ^jt, on: m.id == field(tg, ^jk))
     |> join(:inner, [m, tg], t in Tag, on: t.id == tg.tag_id)
     |> where(^frag)
-    |> group_by([m, tg, t], m.id)
+    |> distinct([m, tg, t], m.id)
   end
 
-  defp labeled_with_all(module, labels, jt, jk)
-       when is_binary(jt) and is_atom(jk) do
+  defp labeled_with_all(module, labels, jt, jk) do
     groupped_labels = labels |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+
+    # Get a fragment that ORs all labels.
+    frag =
+      groupped_labels
+      |> Enum.reduce(false, fn {ns, lbls}, acc ->
+        dynamic([t], ^acc or (t.ns == ^ns and t.label in ^lbls))
+      end)
 
     # Get all tag IDs matching the specification.
     tag_ids =
-      jt
-      |> join(:inner, [tg], t in Tag, on: tg.tag_id == t.id)
-      |> where(
-        ^(groupped_labels
-          |> Enum.reduce(false, fn {ns, lbls}, acc ->
-            dynamic([tg, t], ^acc or (t.ns == ^ns and t.label in ^lbls))
-          end))
-      )
-      |> select([tg, t], t.id)
-      |> group_by([tg, t], t.id)
+      Tag
+      |> where(^frag)
+      |> select([t], t.id)
+      |> distinct([t], t.id)
       |> Dymo.repo().all
 
     # Exact match on *all* tag IDs.
