@@ -73,7 +73,12 @@ defmodule Dymo.Taggable do
 
       @spec all_labels(keyword) :: Query.t()
       def all_labels(opts \\ []),
-        do: unquote(impl).all_labels(unquote(join_table), unquote(join_key), opts)
+        do:
+          unquote(impl).all_labels(
+            unquote(join_table),
+            unquote(join_key),
+            opts
+          )
 
       @spec labeled_with(Tag.label_or_labels(), keyword) :: Query.t()
       def labeled_with(label_or_labels, opts \\ []),

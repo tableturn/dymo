@@ -1,4 +1,6 @@
 defmodule Dymo.TaggerImplTester do
+  @moduledoc false
+
   defmacro __using__(opts) do
     schema = opts |> Keyword.get(:schema)
     primary_key = opts |> Keyword.get(:primary_key)
