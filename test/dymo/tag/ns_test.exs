@@ -1,4 +1,4 @@
-defmodule Dymo.NsTest do
+defmodule Dymo.Tag.NsTest do
   use ExUnit.Case, async: true
 
   alias Dymo.Tag.Ns

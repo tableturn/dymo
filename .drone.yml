@@ -42,7 +42,7 @@ steps:
     image: elixir:1.9
     commands:
       - mix do local.rebar --force, local.hex --force
-      - MIX_ENV=dev mix do deps.get, format --check-formatted, credo --all
+      - MIX_ENV=dev mix do deps.get, dialyzer --halt-exit-status, format --check-formatted, credo --all
 
   # Webhook our slack channel.
   - name: slack-notify

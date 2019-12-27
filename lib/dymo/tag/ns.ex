@@ -3,6 +3,7 @@ defmodule Dymo.Tag.Ns do
   use Ecto.Type
 
   @type t :: atom
+  @type castable_t :: t | String.t() | nil
 
   @doc """
   This is a configurable parametter allowing to change the atom that will
@@ -55,7 +56,7 @@ defmodule Dymo.Tag.Ns do
       :error
   """
   @impl Ecto.Type
-  @spec cast(nil | String.t() | t) :: {:ok, t} | :error
+  @spec cast(castable_t) :: {:ok, t} | :error
   def cast(nil),
     do: root_namespace() |> cast()
 
@@ -73,7 +74,7 @@ defmodule Dymo.Tag.Ns do
   def cast(_),
     do: :error
 
-  @spec cast!(nil | String.t() | t) :: t
+  @spec cast!(castable_t) :: t
   def cast!(value) do
     {:ok, ret} = value |> cast()
     ret
@@ -125,7 +126,7 @@ defmodule Dymo.Tag.Ns do
       :error
   """
   @impl Ecto.Type
-  @spec dump(any) :: :error | {:ok, [atom]}
+  @spec dump(nil | t) :: :error | {:ok, [atom]}
   def dump(nil),
     do: {:ok, "root"}
 

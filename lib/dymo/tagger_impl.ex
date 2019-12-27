@@ -208,7 +208,6 @@ defmodule Dymo.TaggerImpl do
     |> join(:left, [t], tg in ^jt, on: t.id == tg.tag_id)
     |> distinct([t, tg], tg.tag_id)
     |> where([t, tg], t.ns == ^cast_ns and not is_nil(field(tg, ^jk)))
-    |> order_by([t, tg], asc: t.label)
     |> select([t, tg], t.label)
   end
 
@@ -245,7 +244,17 @@ defmodule Dymo.TaggerImpl do
       label_or_labels
       |> List.wrap()
       |> tuppleify(default_ns)
+      |> Enum.uniq()
 
+    opts
+    |> Keyword.get(:match_all, false)
+    |> if(
+      do: module |> labeled_with_all(labels, jt, jk),
+      else: module |> labeled_with_any(labels, jt, jk)
+    )
+  end
+
+  defp labeled_with_any(module, labels, jt, jk) do
     frag =
       labels
       |> Enum.reduce(false, fn {ns, lbl}, acc ->
@@ -257,7 +266,32 @@ defmodule Dymo.TaggerImpl do
     |> join(:inner, [m, tg], t in Tag, on: t.id == tg.tag_id)
     |> where(^frag)
     |> group_by([m, tg, t], m.id)
-    |> order_by([m, tg, t], asc: m.inserted_at)
+  end
+
+  defp labeled_with_all(module, labels, jt, jk)
+       when is_binary(jt) and is_atom(jk) do
+    groupped_labels = labels |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+
+    # Get all tag IDs matching the specification.
+    tag_ids =
+      jt
+      |> join(:inner, [tg], t in Tag, on: tg.tag_id == t.id)
+      |> where(
+        ^(groupped_labels
+          |> Enum.reduce(false, fn {ns, lbls}, acc ->
+            dynamic([tg, t], ^acc or (t.ns == ^ns and t.label in ^lbls))
+          end))
+      )
+      |> select([tg, t], t.id)
+      |> group_by([tg, t], t.id)
+      |> Dymo.repo().all
+
+    # Exact match on *all* tag IDs.
+    module
+    |> join(:inner, [m], tg in ^jt, on: m.id == field(tg, ^jk))
+    |> where([m, tg], tg.tag_id in ^tag_ids)
+    |> group_by([m, tg], m.id)
+    |> having([m, tg], count(field(tg, ^jk)) == ^length(labels))
   end
 
   @spec tuppleify(Tag.label() | Tag.t() | [Tag.label() | Tag.t()], Ns.t()) ::

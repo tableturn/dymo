@@ -1,4 +1,6 @@
 /_build
+/priv/plts/*.plt
+/priv/plts/*.plt.hash
 /cover
 /db
 /deps
