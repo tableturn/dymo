@@ -8,6 +8,10 @@
 
 For all your labelling and tagging needs!™
 
+## Warning
+
+Version `1.0.0` is backward-incompatible with other previous versions. Make sure to read the inline documentation to understand what this means, particularily the namespace fields that are required to be added on the `Tag` schema.
+
 ## Motivations
 
 When it comes to polymorphism, it's always hard to find a match-all solution. Each known implementation have tradeoffs:
@@ -98,12 +102,11 @@ Similarily, you can add / remove labels using `Post.add_labels` and `Post.remove
 You can also force labelling to only use existing tags (avoid on-the-fly creation) by
 passing appropriate options. For example:
 
-````elixir
+```elixir
 post
   |> Taggable.set_labels(~w(ten twelve), ns: :number, create_missing: false)
   |> Taggable.add_labels("Pierre", ns: :name, create_missing: false)
-  |> Taggable
-``
+```
 
 ### Querying Labels
 
@@ -116,14 +119,17 @@ post
   |> Repo.preload(:tags)
   |> Map.get(:tags)
   |> Enum.map(&(&1.label))
-#
-````
+```
 
 Using the helper function:
 
 ```elixir
+# If the namespace is unspecified, the `:root` namespace is used.
 post
   |> Taggable.labels()
+# Otherwise, only the labels from the given namespace are returned.
+post
+  |> Taggable.labels(ns: :number)
 ```
 
 You can also query models that are tagged with specific labels by doing the following:
