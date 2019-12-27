@@ -288,6 +288,7 @@ defmodule Dymo.TaggerImpl do
       |> Dymo.repo().all
 
     # Exact match on *all* tag IDs.
+    # This query could be optimized to use a subquery instead of the ^tag_ids array.
     module
     |> join(:inner, [m], tg in ^jt, on: m.id == field(tg, ^jk))
     |> where([m, tg], tg.tag_id in ^tag_ids)
