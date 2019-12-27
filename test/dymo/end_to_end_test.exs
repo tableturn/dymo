@@ -2,7 +2,7 @@ defmodule Dymo.EndToEndTest do
   @moduledoc false
 
   use Dymo.DataCase, async: false
-  alias Dymo.{Taggable, Repo, Post}
+  alias Dymo.{Taggable, Repo, Post, UUPost}
   import Ecto.Query
 
   describe "performs end-to-end" do
@@ -77,6 +77,43 @@ defmodule Dymo.EndToEndTest do
       assert ["e4", "e5", "e6"] == p3 |> labels(ns: :e)
     end
 
+    test "set_labels/{2,3} can be told not to create new tags" do
+      [p1, p2, p3] =
+        prepare([
+          ["r1", {:a, "a1"}, {:b, "b1"}, {:b, "b2"}],
+          ["r3", {:a, "a1"}, {:b, "b1"}, {:d, "d1"}],
+          [{:e, "e1"}, {:e, "e2"}, {:e, "e3"}]
+        ])
+
+      p1 |> Taggable.set_labels([{:a, "a50"}, {:b, "b32"}], create_missing: false)
+      p3 |> Taggable.set_labels(["e1", "e3", "e4", "e5"], ns: :e, create_missing: false)
+
+      # Assert on p1.
+      assert ["r1"] == p1 |> labels()
+      assert ["r1"] == p1 |> labels(ns: :root)
+      assert [] == p1 |> labels(ns: :a)
+      assert [] == p1 |> labels(ns: :b)
+      assert [] == p1 |> labels(ns: :c)
+      assert [] == p1 |> labels(ns: :d)
+      assert [] == p1 |> labels(ns: :e)
+      # Assert on p2.
+      assert ["r3"] == p2 |> labels()
+      assert ["r3"] == p2 |> labels(ns: :root)
+      assert ["a1"] == p2 |> labels(ns: :a)
+      assert ["b1"] == p2 |> labels(ns: :b)
+      assert [] == p2 |> labels(ns: :c)
+      assert ["d1"] == p2 |> labels(ns: :d)
+      assert [] == p2 |> labels(ns: :e)
+      # Assert on p3.
+      assert [] == p3 |> labels()
+      assert [] == p3 |> labels(ns: :root)
+      assert [] == p3 |> labels(ns: :a)
+      assert [] == p3 |> labels(ns: :b)
+      assert [] == p3 |> labels(ns: :c)
+      assert [] == p3 |> labels(ns: :d)
+      assert ["e1", "e3"] == p3 |> labels(ns: :e)
+    end
+
     test "add_labels/{2,3} adds labels on top" do
       [p1, p2, p3] =
         prepare([
@@ -90,6 +127,7 @@ defmodule Dymo.EndToEndTest do
       |> Taggable.add_labels([{:a, "a3"}, "c1", {:b, "b3"}, {:b, "b4"}], ns: :c)
 
       p2 |> Taggable.add_labels([{:d, "d2"}, {:d, "d3"}])
+
       # Assert on p1.
       assert ["r1", "r2"] == p1 |> labels()
       assert ["r1", "r2"] == p1 |> labels(ns: :root)
@@ -105,6 +143,49 @@ defmodule Dymo.EndToEndTest do
       assert ["b1"] == p2 |> labels(ns: :b)
       assert [] == p2 |> labels(ns: :c)
       assert ["d1", "d2", "d3"] == p2 |> labels(ns: :d)
+      assert [] == p2 |> labels(ns: :e)
+      # Assert on p3.
+      assert [] == p3 |> labels()
+      assert [] == p3 |> labels(ns: :root)
+      assert [] == p3 |> labels(ns: :a)
+      assert [] == p3 |> labels(ns: :b)
+      assert [] == p3 |> labels(ns: :c)
+      assert [] == p3 |> labels(ns: :d)
+      assert ["e4", "e5", "e6"] == p3 |> labels(ns: :e)
+    end
+
+    test "add_labels/{2,3} can be told not to create new tags" do
+      [p1, p2, p3] =
+        prepare([
+          ["r1", {:a, "a1"}, {:a, "a2"}, {:b, "b1"}, {:b, "b2"}],
+          ["r3", {:a, "a1"}, {:b, "b1"}, {:d, "d1"}],
+          [{:e, "e4"}, {:e, "e5"}, {:e, "e6"}]
+        ])
+
+      p1
+      |> Taggable.add_labels("r2", create_missing: false)
+      |> Taggable.add_labels([{:a, "a3"}, "c1", {:b, "b3"}, {:b, "b4"}],
+        ns: :c,
+        create_missing: false
+      )
+
+      p2 |> Taggable.add_labels([{:d, "d2"}, {:d, "d3"}], create_missing: false)
+
+      # Assert on p1.
+      assert ["r1"] == p1 |> labels()
+      assert ["r1"] == p1 |> labels(ns: :root)
+      assert ["a1", "a2"] == p1 |> labels(ns: :a)
+      assert ["b1", "b2"] == p1 |> labels(ns: :b)
+      assert [] == p1 |> labels(ns: :c)
+      assert [] == p1 |> labels(ns: :d)
+      assert [] == p1 |> labels(ns: :e)
+      # Assert on p2.
+      assert ["r3"] == p2 |> labels()
+      assert ["r3"] == p2 |> labels(ns: :root)
+      assert ["a1"] == p2 |> labels(ns: :a)
+      assert ["b1"] == p2 |> labels(ns: :b)
+      assert [] == p2 |> labels(ns: :c)
+      assert ["d1"] == p2 |> labels(ns: :d)
       assert [] == p2 |> labels(ns: :e)
       # Assert on p3.
       assert [] == p3 |> labels()
@@ -198,7 +279,7 @@ defmodule Dymo.EndToEndTest do
       assert ["e4", "e5", "e6"] == p3 |> labels(ns: :e)
     end
 
-    test "all_post_labels/{1, 2}" do
+    test "all_labels/{1, 2}" do
       prepare([
         ["r1", "r2", {:a, "a1"}, {:a, "a2"}, {:a, "a3"}, {:b, "b1"}, {:b, "b3"}, {:c, "c1"}],
         ["r3", {:a, "a1"}, {:b, "b1"}, {:d, "d1"}, {:d, "d2"}, {:d, "d3"}],
@@ -206,14 +287,19 @@ defmodule Dymo.EndToEndTest do
       ])
 
       # Reads all tags in root namespace...
-      assert ["r1", "r2", "r3"] == all_post_labels()
-      assert ["r1", "r2", "r3"] == all_post_labels(ns: :root)
+      assert ["r1", "r2", "r3"] == Post |> all_labels()
+      assert ["r1", "r2", "r3"] == Post |> all_labels(ns: :root)
       # Read all tags in various namespaces.
-      assert ["a1", "a2", "a3"] == all_post_labels(ns: :a)
-      assert ["b1", "b3"] == all_post_labels(ns: :b)
-      assert ["c1"] == all_post_labels(ns: :c)
-      assert ["d1", "d2", "d3"] == all_post_labels(ns: :d)
-      assert ["e4", "e5", "e6"] == all_post_labels(ns: :e)
+      assert ["a1", "a2", "a3"] == Post |> all_labels(ns: :a)
+      assert ["b1", "b3"] == Post |> all_labels(ns: :b)
+      assert ["c1"] == Post |> all_labels(ns: :c)
+      assert ["d1", "d2", "d3"] == Post |> all_labels(ns: :d)
+      assert ["e4", "e5", "e6"] == Post |> all_labels(ns: :e)
+
+      [nil, :root, :a, :b, :c, :d, :e]
+      |> Enum.map(fn ns ->
+        assert [] == UUPost |> all_labels(ns: ns)
+      end)
     end
 
     test "labeled_with/{2,3} in OR mode" do
@@ -267,8 +353,11 @@ defmodule Dymo.EndToEndTest do
       end)
 
   # Gets all labels for the `Post` model.
-  defp all_post_labels(opts \\ []),
-    do: Post |> Taggable.all_labels(opts) |> Repo.all()
+  defp all_labels(taggable_module, opts \\ []),
+    do:
+      taggable_module
+      |> Taggable.all_labels(opts)
+      |> Repo.all()
 
   # Gets all Post models labeled with a given list of labels.
   defp labeled_with(labels, opts \\ []),
