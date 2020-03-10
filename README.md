@@ -10,7 +10,7 @@ For all your labelling and tagging needs!™
 
 ## Warning
 
-Version `1.0.0` is backward-incompatible with other previous versions. Make sure to read the inline documentation to understand what this means, particularily the namespace fields that are required to be added on the `Tag` schema.
+Version `1.0.0` is **backward-incompatible** with other previous versions. Make sure to read the inline documentation to understand what this means, particularily the namespace fields that are required to be added on the `Tag` schema.
 
 ## Motivations
 
@@ -35,6 +35,16 @@ def deps do
   ]
 end
 ```
+
+You should then configure Dymo to use the Repo you'd like. From your config, symply do:
+
+```elixir
+config :dymo,
+  ecto_repo: MyApp.Repo,
+  create_missing_tags_by_default: false
+```
+
+> Note that the `create_missing_tags_by_default` option is set to `false` by default if you omit it, more on this later in this README.
 
 Then, you can install the `Tag` migration in your application (Note
 that for umbrella apps, you'll need to first `cd` into the app
@@ -65,9 +75,7 @@ Alternativelly, you can simply use the `tags()` macro in your schema declaration
 as long as you `use Dymo.Taggable` at the top of your module.
 ```
 
-Note that you can tweak the migrations. For example, you can rename the `posts_tags`
-table to whatever you want (eg. `taggings`) as long as you consistently specify it
-when using the `Tagger` macros:
+> Note that you can tweak the migrations. For example, you can rename the `posts_tags` table to whatever you want (eg. `taggings`) as long as you consistently specify it when using the `Tagger` macros:
 
 ```elixir
 use Dymo.Taggable, join_table: "taggings"
@@ -81,10 +89,12 @@ a fully labellable Post model. Congratulations!
 ## Using Dymo.Taggable
 
 When a module uses `Dymo.Taggable`, many shortcut functions are
-meta-programmed into it.
+backed into it.
 
 It becomes easy to achieve labelling-related tasks. All the examples
 bellow assyme that a `Post` module calls `use Dymo.Taggable`.
+
+> If you would like to see more advanced uses and how Dymo's API works, a good starting point is probably [this file](test/dymo/end_to_end_test.exs), which calls on most functions that you'll ever need.
 
 ### Editing Labels
 
@@ -92,9 +102,9 @@ To set the tags on an instance of a post:
 
 ```elixir
 post
-  |> Taggable.set_labels(~w(ten eleven), ns: :number)
-  |> Taggable.set_labels([{:car, "Fort"}, {:color, "blue"}])
-  |> Taggable.set_labels("Heineken", ns: :beer)
+  |> Taggable.set_labels(~w(ten eleven), ns: :number, create_missing: true)
+  |> Taggable.set_labels([{:car, "Fort"}, {:color, "blue"}], create_missing: true)
+  |> Taggable.set_labels("Heineken", ns: :beer, create_missing: true)
 ```
 
 Similarily, you can add / remove labels using `Post.add_labels` and `Post.remove_labels`.
@@ -104,8 +114,19 @@ passing appropriate options. For example:
 
 ```elixir
 post
-  |> Taggable.set_labels(~w(ten twelve), ns: :number, create_missing: false)
-  |> Taggable.add_labels("Pierre", ns: :name, create_missing: false)
+  |> Taggable.set_labels(~w(ten twelve), ns: :number, create_missing: true)
+  |> Taggable.add_labels("Pierre", ns: :name, create_missing: true)
+```
+
+The default option for functions that either set or add labels is to **not** create non-
+existent tags. Passing the `create_missing: true` option allows to create tags that were never seen
+by the system before. The reason behind this choice is to prevent Dymo from inadvertently creating
+infinite labels in your database if you ever decided to leave an endpoint open allowing that.
+
+You can override this behaviour by doing the following in your `config` files:
+
+```elixir
+config :dymo, create_missing_tags_by_default: true
 ```
 
 ### Querying Labels
