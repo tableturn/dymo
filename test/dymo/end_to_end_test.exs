@@ -48,8 +48,13 @@ defmodule Dymo.EndToEndTest do
           [{:e, "e1"}, {:e, "e2"}, {:e, "e3"}]
         ])
 
-      p1 |> Taggable.set_labels([{:a, "a1"}, "a2", {:b, "b1"}, {:b, "b2"}], ns: :a)
-      p3 |> Taggable.set_labels([{:e, "e4"}, {:e, "e5"}, {:e, "e6"}])
+      p1
+      |> Taggable.set_labels([{:a, "a1"}, "a2", {:b, "b1"}, {:b, "b2"}],
+        ns: :a,
+        create_missing: true
+      )
+
+      p3 |> Taggable.set_labels([{:e, "e4"}, {:e, "e5"}, {:e, "e6"}], create_missing: true)
 
       # Assert on p1.
       assert ["r1"] == p1 |> labels()
@@ -85,8 +90,8 @@ defmodule Dymo.EndToEndTest do
           [{:e, "e1"}, {:e, "e2"}, {:e, "e3"}]
         ])
 
-      p1 |> Taggable.set_labels([{:a, "a50"}, {:b, "b32"}], create_missing: false)
-      p3 |> Taggable.set_labels(["e1", "e3", "e4", "e5"], ns: :e, create_missing: false)
+      p1 |> Taggable.set_labels([{:a, "a50"}, {:b, "b32"}])
+      p3 |> Taggable.set_labels(["e1", "e3", "e4", "e5"], ns: :e)
 
       # Assert on p1.
       assert ["r1"] == p1 |> labels()
@@ -123,10 +128,13 @@ defmodule Dymo.EndToEndTest do
         ])
 
       p1
-      |> Taggable.add_labels("r2")
-      |> Taggable.add_labels([{:a, "a3"}, "c1", {:b, "b3"}, {:b, "b4"}], ns: :c)
+      |> Taggable.add_labels("r2", create_missing: true)
+      |> Taggable.add_labels([{:a, "a3"}, "c1", {:b, "b3"}, {:b, "b4"}],
+        ns: :c,
+        create_missing: true
+      )
 
-      p2 |> Taggable.add_labels([{:d, "d2"}, {:d, "d3"}])
+      p2 |> Taggable.add_labels([{:d, "d2"}, {:d, "d3"}], create_missing: true)
 
       # Assert on p1.
       assert ["r1", "r2"] == p1 |> labels()
@@ -154,7 +162,7 @@ defmodule Dymo.EndToEndTest do
       assert ["e4", "e5", "e6"] == p3 |> labels(ns: :e)
     end
 
-    test "add_labels/{2,3} can be told not to create new tags" do
+    test "add_labels/{2,3} cannot create new unseen tags by default" do
       [p1, p2, p3] =
         prepare([
           ["r1", {:a, "a1"}, {:a, "a2"}, {:b, "b1"}, {:b, "b2"}],
@@ -163,13 +171,10 @@ defmodule Dymo.EndToEndTest do
         ])
 
       p1
-      |> Taggable.add_labels("r2", create_missing: false)
-      |> Taggable.add_labels([{:a, "a3"}, "c1", {:b, "b3"}, {:b, "b4"}],
-        ns: :c,
-        create_missing: false
-      )
+      |> Taggable.add_labels("r2")
+      |> Taggable.add_labels([{:a, "a3"}, "c1", {:b, "b3"}, {:b, "b4"}], ns: :c)
 
-      p2 |> Taggable.add_labels([{:d, "d2"}, {:d, "d3"}], create_missing: false)
+      p2 |> Taggable.add_labels([{:d, "d2"}, {:d, "d3"}])
 
       # Assert on p1.
       assert ["r1"] == p1 |> labels()
@@ -337,7 +342,7 @@ defmodule Dymo.EndToEndTest do
   end
 
   # Prepares fixtures given a list of lists of tags.
-  def prepare(fixtures),
+  defp prepare(fixtures),
     do:
       fixtures
       |> Enum.map(fn data ->
@@ -347,7 +352,7 @@ defmodule Dymo.EndToEndTest do
           |> Repo.insert!()
 
         post
-        |> Taggable.set_labels(data)
+        |> Taggable.set_labels(data, create_missing: true)
 
         post
       end)
