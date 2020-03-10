@@ -48,12 +48,12 @@ defmodule Dymo.TaggerImpl do
       iex> post = %Dymo.Post{title: "Hey"}
       ...>  |> Dymo.repo().insert!
       iex> post
-      ...>  |> TaggerImpl.set_labels([{:rank, "one"}, {:rank, "two"}])
+      ...>  |> TaggerImpl.set_labels([{:rank, "one"}, {:rank, "two"}], create_missing: true)
       ...>  |> Map.get(:tags)
       ...>  |> Enum.map(& {&1.ns, &1.label})
       [{:rank, "one"}, {:rank, "two"}]
       iex> post
-      ...>  |> TaggerImpl.set_labels({:rank, "officer"})
+      ...>  |> TaggerImpl.set_labels({:rank, "officer"}, create_missing: true)
       ...>  |> Map.get(:tags)
       ...>  |> Enum.map(& {&1.ns, &1.label})
       [{:rank, "officer"}]
@@ -98,8 +98,8 @@ defmodule Dymo.TaggerImpl do
 
       iex> %Dymo.Post{title: "Hey"}
       ...>  |> Dymo.repo().insert!
-      ...>  |> TaggerImpl.set_labels([{:number, "three"}, {:number, "four"}])
-      ...>  |> TaggerImpl.add_labels({:number, "five"})
+      ...>  |> TaggerImpl.set_labels([{:number, "three"}, {:number, "four"}], create_missing: true)
+      ...>  |> TaggerImpl.add_labels({:number, "five"}, create_missing: true)
       ...>  |> Map.get(:tags)
       ...>  |> Enum.map(& &1.label)
       ...>  |> Enum.sort()
@@ -146,7 +146,7 @@ defmodule Dymo.TaggerImpl do
 
       iex> %{tags: tags} = %Dymo.Post{title: "Hey"}
       ...>  |> Dymo.repo().insert!
-      ...>  |> TaggerImpl.set_labels([{:number, "six"}, {:number, "seven"}])
+      ...>  |> TaggerImpl.set_labels([{:number, "six"}, {:number, "seven"}], create_missing: true)
       ...>  |> TaggerImpl.remove_labels({:number, "six"})
       iex> Enum.map(tags, & &1.label)
       ["seven"]
@@ -189,7 +189,7 @@ defmodule Dymo.TaggerImpl do
 
       iex> %Dymo.Post{title: "Hey"}
       ...>  |> Dymo.repo().insert!
-      ...>  |> TaggerImpl.set_labels([{:number, "eight"}, {:number, "nine"}])
+      ...>  |> TaggerImpl.set_labels([{:number, "eight"}, {:number, "nine"}], create_missing: true)
       iex> "taggings"
       ...>  |> TaggerImpl.all_labels(:post_id, ns: :number)
       ...>  |> Dymo.repo().all()
@@ -218,7 +218,7 @@ defmodule Dymo.TaggerImpl do
 
       iex> %{id: id} = %Dymo.Post{title: "Hey"}
       ...>  |> Dymo.repo().insert!
-      ...>  |> TaggerImpl.set_labels([{:number, "ten"}, {:number, "eleven"}])
+      ...>  |> TaggerImpl.set_labels([{:number, "ten"}, {:number, "eleven"}], create_missing: true)
       iex> id == Dymo.Post
       ...>  |> TaggerImpl.labeled_with({:number, "ten"}, "taggings", :post_id)
       ...>  |> Dymo.repo().all()
@@ -318,7 +318,7 @@ defmodule Dymo.TaggerImpl do
     # Based on options, we might want to skip creation of non-existent tags.
     finder_or_creator =
       opts
-      |> Keyword.get(:create_missing, true)
+      |> Keyword.get(:create_missing, Dymo.create_missing_tags_by_default())
       |> if do
         &Tag.find_or_create!/1
       else

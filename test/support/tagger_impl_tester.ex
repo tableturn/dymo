@@ -30,40 +30,50 @@ defmodule Dymo.TaggerImplTester do
         end
 
         test "returns the tagged labels in a given namespace", %{posts: [p1, _]} do
-          p1 |> TaggerImpl.set_labels(@labels3, ns: :ns3)
+          p1 |> TaggerImpl.set_labels(@labels3, ns: :ns3, create_missing: true)
           assert @labels3 == p1 |> taggable_labels(ns: :ns3)
         end
       end
 
       describe ".set_labels/3" do
         test "overwrites existing labels", %{posts: [p1, _]} do
-          p1 |> TaggerImpl.set_labels(@labels3)
+          p1 |> TaggerImpl.set_labels(@labels3, create_missing: true)
           assert @labels3 == p1 |> taggable_labels()
         end
 
         test "overwrites existing labels with the same namespace", %{posts: [p1, _]} do
-          p1 |> TaggerImpl.set_labels(@labels4, ns: :ns1)
+          p1 |> TaggerImpl.set_labels(@labels4, ns: :ns1, create_missing: true)
           assert @labels1 == p1 |> taggable_labels()
           assert @labels4 == p1 |> taggable_labels(ns: :ns1)
         end
 
         test "can handle namespaces directly on tags", %{posts: [p1, p2]} do
-          p1 |> TaggerImpl.set_labels(tuppleify(@labels4, :ns3))
-          p2 |> TaggerImpl.set_labels(tuppleify(@labels3, :ns3) ++ tuppleify(@labels4, :ns4))
+          p1 |> TaggerImpl.set_labels(tuppleify(@labels4, :ns3), create_missing: true)
+
+          p2
+          |> TaggerImpl.set_labels(tuppleify(@labels3, :ns3) ++ tuppleify(@labels4, :ns4),
+            create_missing: true
+          )
+
           assert @labels4 == p1 |> taggable_labels(ns: :ns3)
           assert @labels3 == p2 |> taggable_labels(ns: :ns3)
           assert @labels4 == p2 |> taggable_labels(ns: :ns4)
         end
 
         test "only uses the optional namespace when none is found on tags", %{posts: [p1, _]} do
-          p1 |> TaggerImpl.set_labels(@labels1 ++ tuppleify(@labels2, :ns2), ns: :ns1)
+          p1
+          |> TaggerImpl.set_labels(@labels1 ++ tuppleify(@labels2, :ns2),
+            ns: :ns1,
+            create_missing: true
+          )
+
           assert @labels1 == p1 |> taggable_labels(ns: :ns1)
           assert @labels2 == p1 |> taggable_labels(ns: :ns2)
         end
 
         test "can be prevented from creating new tags", %{posts: [p1, p2]} do
-          p1 |> TaggerImpl.set_labels(@nonexistent_labels, create_missing: false)
-          p2 |> TaggerImpl.set_labels(@nonexistent_labels, create_missing: false, ns: :ns2)
+          p1 |> TaggerImpl.set_labels(@nonexistent_labels)
+          p2 |> TaggerImpl.set_labels(@nonexistent_labels, ns: :ns2)
           assert p1 |> taggable_labels() |> Enum.empty?()
           assert p2 |> taggable_labels(ns: :ns2) |> Enum.empty?()
         end
@@ -71,35 +81,45 @@ defmodule Dymo.TaggerImplTester do
 
       describe ".add_labels/{2,3}" do
         test "adds the labels", %{posts: [p1, p2]} do
-          p1 |> TaggerImpl.add_labels(@labels3)
+          p1 |> TaggerImpl.add_labels(@labels3, create_missing: true)
           assert (@labels1 ++ @labels3) |> Enum.sort() == p1 |> taggable_labels()
           assert @labels2 == p2 |> taggable_labels
         end
 
         test "adds the labels in the given namespace", %{posts: [p1, _]} do
-          p1 |> TaggerImpl.add_labels(@labels3)
-          p1 |> TaggerImpl.add_labels(@labels3, ns: :ns1)
+          p1 |> TaggerImpl.add_labels(@labels3, create_missing: true)
+          p1 |> TaggerImpl.add_labels(@labels3, ns: :ns1, create_missing: true)
           assert (@labels1 ++ @labels3) |> Enum.sort() == p1 |> taggable_labels()
           assert @labels3 == p1 |> taggable_labels(ns: :ns1)
         end
 
         test "can handle namespaces directly on tags", %{posts: [p1, p2]} do
-          p1 |> TaggerImpl.add_labels(tuppleify(@labels4, :ns3))
-          p2 |> TaggerImpl.add_labels(tuppleify(@labels3, :ns3) ++ tuppleify(@labels4, :ns4))
+          p1 |> TaggerImpl.add_labels(tuppleify(@labels4, :ns3), create_missing: true)
+
+          p2
+          |> TaggerImpl.add_labels(tuppleify(@labels3, :ns3) ++ tuppleify(@labels4, :ns4),
+            create_missing: true
+          )
+
           assert @labels4 == p1 |> taggable_labels(ns: :ns3)
           assert @labels3 == p2 |> taggable_labels(ns: :ns3)
           assert @labels4 == p2 |> taggable_labels(ns: :ns4)
         end
 
         test "only uses the optional namespace when none is found on tags", %{posts: [p1, _]} do
-          p1 |> TaggerImpl.add_labels(@labels1 ++ tuppleify(@labels2, :ns2), ns: :ns1)
+          p1
+          |> TaggerImpl.add_labels(@labels1 ++ tuppleify(@labels2, :ns2),
+            ns: :ns1,
+            create_missing: true
+          )
+
           assert @labels1 == p1 |> taggable_labels(ns: :ns1)
           assert @labels2 == p1 |> taggable_labels(ns: :ns2)
         end
 
         test "can be prevented from creating new tags", %{posts: [p1, p2]} do
-          p1 |> TaggerImpl.add_labels(@nonexistent_labels, create_missing: false)
-          p2 |> TaggerImpl.add_labels(@nonexistent_labels, create_missing: false, ns: :ns2)
+          p1 |> TaggerImpl.add_labels(@nonexistent_labels)
+          p2 |> TaggerImpl.add_labels(@nonexistent_labels, ns: :ns2)
           assert @labels1 == p1 |> taggable_labels()
           assert @labels2 == p2 |> taggable_labels()
           assert p2 |> taggable_labels(ns: :ns2) |> Enum.empty?()
@@ -109,13 +129,13 @@ defmodule Dymo.TaggerImplTester do
       describe ".remove_labels/{2,3}" do
         test "removes the specified labels using combinations of namespaces", %{posts: [p1, p2]} do
           p1
-          |> TaggerImpl.add_labels(@labels4, ns: :ns4)
+          |> TaggerImpl.add_labels(@labels4, ns: :ns4, create_missing: true)
           |> TaggerImpl.remove_labels("t12")
-          |> TaggerImpl.remove_labels("t42", ns: :ns4)
+          |> TaggerImpl.remove_labels("t42", ns: :ns4, create_missing: true)
 
           p2
-          |> TaggerImpl.add_labels(@labels2, ns: :ns2)
-          |> TaggerImpl.add_labels(@labels4, ns: :ns4)
+          |> TaggerImpl.add_labels(@labels2, ns: :ns2, create_missing: true)
+          |> TaggerImpl.add_labels(@labels4, ns: :ns4, create_missing: true)
           |> TaggerImpl.remove_labels("t12")
           |> TaggerImpl.remove_labels(["t22", {:ns4, "t42"}], ns: :ns2)
 
@@ -153,8 +173,8 @@ defmodule Dymo.TaggerImplTester do
         end
 
         test "gets multiple entities when appropriate", %{posts: [p1, p2]} do
-          p1 |> TaggerImpl.add_labels(@labels3)
-          p2 |> TaggerImpl.add_labels(@labels3)
+          p1 |> TaggerImpl.add_labels(@labels3, create_missing: true)
+          p2 |> TaggerImpl.add_labels(@labels3, create_missing: true)
 
           assert Enum.sort([p1.id, p2.id]) ==
                    @schema
@@ -172,7 +192,7 @@ defmodule Dymo.TaggerImplTester do
             &(@schema.struct()
               |> @schema.changeset(%{title: "Hello!", body: "Bodybuilder."})
               |> Repo.insert!()
-              |> TaggerImpl.set_labels(&1))
+              |> TaggerImpl.set_labels(&1, create_missing: true))
           )
 
         {:ok, posts: posts}
