@@ -7,7 +7,6 @@ defmodule Dymo.TaggerImpl do
   import Ecto.{Changeset, Query}
 
   alias Ecto.{Query, Schema}
-  alias Ecto.Association.NotLoaded
   alias Dymo.{Tag, Tag.Ns, Taggable, Tagger}
 
   @behaviour Tagger
@@ -60,15 +59,9 @@ defmodule Dymo.TaggerImpl do
   """
   @impl Tagger
   @spec set_labels(Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
-  def set_labels(struct, lbls, opts \\ [])
+  def set_labels(struct, label_or_labels, opts \\ []) do
+    %{tags: tags} = full_struct = struct |> Dymo.repo().preload(:tags)
 
-  def set_labels(%{tags: %NotLoaded{}} = struct, lbls, opts),
-    do:
-      struct
-      |> Dymo.repo().preload(:tags)
-      |> set_labels(lbls, opts)
-
-  def set_labels(%{id: _, tags: tags} = struct, label_or_labels, opts) do
     default_ns =
       opts
       |> Keyword.get(:ns)
@@ -88,7 +81,7 @@ defmodule Dymo.TaggerImpl do
     # From a map get back into an array.
     |> groupped_labels_to_list()
     # Commit.
-    |> maintain_labels_tags(struct, opts)
+    |> maintain_labels_tags(full_struct, opts)
   end
 
   @doc """
@@ -107,15 +100,8 @@ defmodule Dymo.TaggerImpl do
   """
   @impl Tagger
   @spec add_labels(Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
-  def add_labels(struct, lbls, opts \\ [])
-
-  def add_labels(%{tags: %NotLoaded{}} = struct, lbls, opts),
-    do:
-      struct
-      |> Dymo.repo().preload(:tags)
-      |> add_labels(lbls, opts)
-
-  def add_labels(%{id: _, tags: tags} = struct, lbls, opts) do
+  def add_labels(struct, lbls, opts \\ []) do
+    %{tags: tags} = full_struct = struct |> Dymo.repo().preload(:tags)
     # Get the optional namespace, or default it.
     default_ns = opts |> Keyword.get(:ns) |> Ns.cast!()
     # Prepare a lookup table of the existing tags. For this, we make
@@ -136,7 +122,7 @@ defmodule Dymo.TaggerImpl do
     # Add the existing ones.
     |> Enum.concat(tags)
     # Commit.
-    |> maintain_labels_tags(struct, opts)
+    |> maintain_labels_tags(full_struct, opts)
   end
 
   @doc """
@@ -153,15 +139,8 @@ defmodule Dymo.TaggerImpl do
   """
   @impl Tagger
   @spec remove_labels(Taggable.t(), Tag.label_or_labels(), keyword) :: Schema.t()
-  def remove_labels(struct, lbls, opts \\ [])
-
-  def remove_labels(%{tags: %NotLoaded{}} = struct, lbls, opts),
-    do:
-      struct
-      |> Dymo.repo().preload(:tags)
-      |> remove_labels(lbls, opts)
-
-  def remove_labels(%{id: _, tags: tags} = struct, lbls, opts) do
+  def remove_labels(struct, lbls, opts \\ []) do
+    %{tags: tags} = full_struct = struct |> Dymo.repo().preload(:tags)
     # Get the optional namespace or default it.
     default_ns = opts |> Keyword.get(:ns) |> Ns.cast!()
 
@@ -179,7 +158,7 @@ defmodule Dymo.TaggerImpl do
     # Transform back into an array.
     |> groupped_labels_to_list
     # Commit.
-    |> maintain_labels_tags(struct, opts)
+    |> maintain_labels_tags(full_struct, opts)
   end
 
   @doc """
