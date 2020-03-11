@@ -50,7 +50,7 @@ Then, you can install the `Tag` migration in your application (Note
 that for umbrella apps, you'll need to first `cd` into the app
 containing your repo migrations):
 
-```
+```text
 $ mix dymo.install
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20180828154957_create_tags.exs
@@ -59,7 +59,7 @@ $ mix dymo.install
 Once done, you should start and make a join table for the model(s) you
 want to be able to label. There is a mix task for this too!
 
-```
+```text
 $ mix dymo.join_table MyApp.Post
 * creating priv/repo/migrations
 * creating priv/repo/migrations/20180828154958_create_posts_tags.exs
@@ -114,8 +114,8 @@ passing appropriate options. For example:
 
 ```elixir
 post
-  |> Taggable.set_labels(~w(ten twelve), ns: :number, create_missing: true)
-  |> Taggable.add_labels("Pierre", ns: :name, create_missing: true)
+  |> Taggable.set_labels(~w(ten twelve), ns: :number, create_missing: false)
+  |> Taggable.add_labels("Pierre", ns: :name, create_missing: false)
 ```
 
 The default option for functions that either set or add labels is to **not** create non-
