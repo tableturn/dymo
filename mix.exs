@@ -1,8 +1,8 @@
 defmodule Dymo.MixProject do
   use Mix.Project
 
-  def project do
-    [
+  def project(),
+    do: [
       app: :dymo,
       version: "1.0.3",
       elixir: "~> 1.5",
@@ -25,47 +25,43 @@ defmodule Dymo.MixProject do
       package: package(),
       description: "Dymo is your database labeling companion."
     ]
-  end
 
-  def application do
-    [
+  def application(),
+    do: [
       extra_applications: [:logger, :runtime_tools]
     ]
-  end
 
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
+  defp elixirc_paths(:test),
+    do: ["lib", "test/support"]
 
-  defp deps do
-    [
+  defp elixirc_paths(_),
+    do: ["lib"]
+
+  defp deps(),
+    do: [
       # Dev and Test only.
+      {:ecto_sql, "~> 3.3", only: [:dev, :test]},
       {:postgrex, "~> 0.14", only: [:dev, :test]},
       # Dev only.
-      {:credo, "~> 1.1.0", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.7", only: :dev, runtime: false},
+      {:credo, "~> 1.1", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       {:ex_doc, "~> 0.19", only: :dev},
       # Test only.
       {:excoveralls, "~> 0.8", only: :test},
       # Everything else.
-      {:inflex, "~> 1.10.0"}
-    ] ++ deps(Mix.env())
-  end
+      {:ecto, "~> 3.4"},
+      {:inflex, "~> 2.0"}
+    ]
 
-  defp deps(env) when env in [:dev, :test], do: [{:ecto_sql, "~> 3.0"}]
+  defp cli_env_for(env, tasks),
+    do: Enum.reduce(tasks, [], &Keyword.put(&2, :"#{&1}", env))
 
-  defp deps(_), do: [{:ecto, "~> 3.0"}]
-
-  defp cli_env_for(env, tasks) do
-    Enum.reduce(tasks, [], &Keyword.put(&2, :"#{&1}", env))
-  end
-
-  defp package do
-    [
+  defp package(),
+    do: [
       name: "dymo",
       files: ["lib", "mix.exs", "README*"],
       maintainers: ["Pierre Martin", "Jean Parpaillon"],
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => "https://github.com/tableturn/dymo"}
     ]
-  end
 end
