@@ -45,7 +45,7 @@ defmodule Dymo.MixProject do
       # Dev only.
       {:credo, "~> 1.1", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.19", only: :dev},
+      {:ex_doc, "~> 0.19", only: [:dev, :test, :docs]},
       # Test only.
       {:excoveralls, "~> 0.8", only: :test},
       # Everything else.
