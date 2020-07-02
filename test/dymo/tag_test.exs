@@ -70,12 +70,12 @@ defmodule Dymo.TagTest do
 
   describe ".cast/1" do
     test "can cast into a valid changeset", %{ns: ns, label: label} do
-      tag = {ns, label} |> Tag.cast()
+      tag = {ns, label} |> Tag.to_struct()
       assert match?(%Tag{ns: ^ns, label: ^label}, tag)
     end
 
     test "raises when the cast cannot be performed", %{label: label} do
-      ret = catch_error({"bad namespace", label} |> Tag.cast())
+      ret = catch_error({"bad namespace", label} |> Tag.to_struct())
       assert match?(%RuntimeError{}, ret)
     end
   end

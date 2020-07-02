@@ -2,8 +2,10 @@ defmodule Dymo.EndToEndTest do
   @moduledoc false
 
   use Dymo.DataCase, async: false
-  alias Dymo.{Taggable, Repo, Post, UUPost}
+  alias Dymo.{Tag, Taggable, Repo, Post, UUPost}
   import Ecto.Query
+
+  setup :create_unassignable_tags
 
   describe "performs end-to-end" do
     test "set_labels/{2,3} works from scratch" do
@@ -341,21 +343,37 @@ defmodule Dymo.EndToEndTest do
     end
   end
 
+  ## Private.
+
+  def create_unassignable_tags(_) do
+    [
+      %{label: "nr1", assignable: false},
+      %{ns: :a, label: "na1", assignable: false},
+      %{ns: :b, label: "nb1", assignable: false},
+      %{ns: :b, label: "nb2", assignable: false}
+    ]
+    |> Enum.each(&(&1 |> Tag.changeset() |> Repo.insert!()))
+
+    :ok
+  end
+
   # Prepares fixtures given a list of lists of tags.
-  defp prepare(fixtures),
-    do:
-      fixtures
-      |> Enum.map(fn data ->
-        post =
-          %Post{}
-          |> Post.changeset(%{title: "Hey!", body: "Bodybuilder..."})
-          |> Repo.insert!()
+  defp prepare(fixtures) do
+    unassignable = ["nr1", {:a, "na1"}, {:b, "nb1"}, {:b, "nb2"}]
 
-        post
-        |> Taggable.set_labels(data, create_missing: true)
+    fixtures
+    |> Enum.map(fn data ->
+      post =
+        %Post{}
+        |> Post.changeset(%{title: "Hey!", body: "Bodybuilder..."})
+        |> Repo.insert!()
 
-        post
-      end)
+      post
+      |> Taggable.set_labels(data ++ unassignable, create_missing: true)
+
+      post
+    end)
+  end
 
   # Gets all labels for the `Post` model.
   defp all_labels(taggable_module, opts \\ []),

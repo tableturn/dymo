@@ -4,7 +4,7 @@ defmodule Dymo.MixProject do
   def project(),
     do: [
       app: :dymo,
-      version: "1.0.4",
+      version: "2.0.0",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,

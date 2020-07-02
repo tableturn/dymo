@@ -1,5 +1,6 @@
 defmodule Dymo.TaggerImplTester do
   @moduledoc false
+  alias Dymo.Tag
 
   defmacro __using__(opts) do
     schema = opts |> Keyword.get(:schema)
@@ -19,7 +20,8 @@ defmodule Dymo.TaggerImplTester do
       @labels2 ~w(t21 t22 t23)
       @labels3 ~w(t31 t32 t33)
       @labels4 ~w(t41 t42 t43)
-      @nonexistent_labels ~w(tn1 tn2 tn3)
+      @unassignable ~w(tna11 tna12)
+      @nonexistent ~w(tn1 tn2 tn3)
 
       setup :taggables
 
@@ -29,19 +31,19 @@ defmodule Dymo.TaggerImplTester do
           assert @labels2 == p2 |> taggable_labels()
         end
 
-        test "returns the tagged labels in a given namespace", %{posts: [p1, _]} do
+        test "returns the tagged labels in a given namespace", %{posts: [p1 | _]} do
           p1 |> TaggerImpl.set_labels(@labels3, ns: :ns3, create_missing: true)
           assert @labels3 == p1 |> taggable_labels(ns: :ns3)
         end
       end
 
       describe ".set_labels/3" do
-        test "overwrites existing labels", %{posts: [p1, _]} do
+        test "overwrites existing labels", %{posts: [p1 | _]} do
           p1 |> TaggerImpl.set_labels(@labels3, create_missing: true)
           assert @labels3 == p1 |> taggable_labels()
         end
 
-        test "overwrites existing labels with the same namespace", %{posts: [p1, _]} do
+        test "overwrites existing labels with the same namespace", %{posts: [p1 | _]} do
           p1 |> TaggerImpl.set_labels(@labels4, ns: :ns1, create_missing: true)
           assert @labels1 == p1 |> taggable_labels()
           assert @labels4 == p1 |> taggable_labels(ns: :ns1)
@@ -60,7 +62,7 @@ defmodule Dymo.TaggerImplTester do
           assert @labels4 == p2 |> taggable_labels(ns: :ns4)
         end
 
-        test "only uses the optional namespace when none is found on tags", %{posts: [p1, _]} do
+        test "only uses the optional namespace when none is found on tags", %{posts: [p1 | _]} do
           p1
           |> TaggerImpl.set_labels(@labels1 ++ tuppleify(@labels2, :ns2),
             ns: :ns1,
@@ -72,10 +74,22 @@ defmodule Dymo.TaggerImplTester do
         end
 
         test "can be prevented from creating new tags", %{posts: [p1, p2]} do
-          p1 |> TaggerImpl.set_labels(@nonexistent_labels)
-          p2 |> TaggerImpl.set_labels(@nonexistent_labels, ns: :ns2)
+          p1 |> TaggerImpl.set_labels(@nonexistent)
+          p2 |> TaggerImpl.set_labels(@nonexistent, ns: :ns2)
           assert p1 |> taggable_labels() |> Enum.empty?()
           assert p2 |> taggable_labels(ns: :ns2) |> Enum.empty?()
+        end
+
+        test "does not attach tags that are unassignable", %{posts: [p1 | _]} do
+          create_unassignable_labels(nil)
+          p1 |> TaggerImpl.set_labels(@unassignable, ns: :ns1, create_missing: true)
+          assert [] == p1 |> taggable_labels(ns: :ns1)
+        end
+
+        test "attaches assignable tags when mixed with unassignable tags", %{posts: [p1 | _]} do
+          create_unassignable_labels(nil)
+          p1 |> TaggerImpl.set_labels(@unassignable ++ @labels1, ns: :ns1, create_missing: true)
+          assert @labels1 == p1 |> taggable_labels(ns: :ns1)
         end
       end
 
@@ -86,7 +100,7 @@ defmodule Dymo.TaggerImplTester do
           assert @labels2 == p2 |> taggable_labels
         end
 
-        test "adds the labels in the given namespace", %{posts: [p1, _]} do
+        test "adds the labels in the given namespace", %{posts: [p1 | _]} do
           p1 |> TaggerImpl.add_labels(@labels3, create_missing: true)
           p1 |> TaggerImpl.add_labels(@labels3, ns: :ns1, create_missing: true)
           assert (@labels1 ++ @labels3) |> Enum.sort() == p1 |> taggable_labels()
@@ -106,7 +120,7 @@ defmodule Dymo.TaggerImplTester do
           assert @labels4 == p2 |> taggable_labels(ns: :ns4)
         end
 
-        test "only uses the optional namespace when none is found on tags", %{posts: [p1, _]} do
+        test "only uses the optional namespace when none is found on tags", %{posts: [p1 | _]} do
           p1
           |> TaggerImpl.add_labels(@labels1 ++ tuppleify(@labels2, :ns2),
             ns: :ns1,
@@ -118,11 +132,23 @@ defmodule Dymo.TaggerImplTester do
         end
 
         test "can be prevented from creating new tags", %{posts: [p1, p2]} do
-          p1 |> TaggerImpl.add_labels(@nonexistent_labels)
-          p2 |> TaggerImpl.add_labels(@nonexistent_labels, ns: :ns2)
+          p1 |> TaggerImpl.add_labels(@nonexistent)
+          p2 |> TaggerImpl.add_labels(@nonexistent, ns: :ns2)
           assert @labels1 == p1 |> taggable_labels()
           assert @labels2 == p2 |> taggable_labels()
           assert p2 |> taggable_labels(ns: :ns2) |> Enum.empty?()
+        end
+
+        test "does not attach tags that are unassignable", %{posts: [p1 | _]} do
+          create_unassignable_labels(nil)
+          p1 |> TaggerImpl.add_labels(@unassignable, ns: :ns1, create_missing: true)
+          assert [] == p1 |> taggable_labels(ns: :ns1)
+        end
+
+        test "attaches assignable tags when mixed with unassignable tags", %{posts: [p1 | _]} do
+          create_unassignable_labels(nil)
+          p1 |> TaggerImpl.add_labels(@unassignable ++ @labels1, ns: :ns1, create_missing: true)
+          assert @labels1 == p1 |> taggable_labels(ns: :ns1)
         end
       end
 
@@ -164,7 +190,7 @@ defmodule Dymo.TaggerImplTester do
                    |> Repo.all()
         end
 
-        test "gets a single entity when appropriate", %{posts: [p1, _]} do
+        test "gets a single entity when appropriate", %{posts: [p1 | _]} do
           assert [p1.id] ==
                    @schema
                    |> TaggerImpl.labeled_with("t11", @join_table, @primary_key)
@@ -210,6 +236,14 @@ defmodule Dymo.TaggerImplTester do
           |> TaggerImpl.labels(@join_table, @primary_key, opts)
           |> Repo.all()
           |> Enum.sort()
+
+      defp create_unassignable_labels(_) do
+        for label <- @unassignable do
+          %{ns: :ns1, label: label, assignable: false}
+          |> Tag.changeset()
+          |> Repo.insert!()
+        end
+      end
     end
   end
 end
