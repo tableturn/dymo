@@ -5,12 +5,10 @@ defmodule Dymo.Tag do
   It essentially aims at maintaining singleton labels in a `tags` table
   and exposes helper functions to ease their creation.
   """
-
   use Ecto.Schema
-  import Ecto.Query
-
   alias Dymo.Tag.Ns
   alias Ecto.Changeset
+  import Ecto.{Query, Changeset}
 
   @me __MODULE__
 
@@ -25,15 +23,17 @@ defmodule Dymo.Tag do
   @type label_or_labels :: label | [label]
 
   @typedoc "Defines attributes for building this model's changeset"
-  @type attrs :: %{
+  @type creation_attrs :: %{
           optional(:ns) => Ns.t(),
+          optional(:assignable) => boolean,
           required(:label) => String.t()
         }
 
   schema "tags" do
     # Regular fields.
-    field :label, :string
     field :ns, Ns, default: Ns.root_namespace()
+    field :label, :string
+    field :assignable, :boolean, default: true
     timestamps()
   end
 
@@ -71,7 +71,7 @@ defmodule Dymo.Tag do
       ...>   |> Map.take([:valid?])
       %{valid?: false}
   """
-  @spec changeset(label | attrs()) :: Ecto.Changeset.t()
+  @spec changeset(label | creation_attrs()) :: Changeset.t()
   # Called for a given string label.
   def changeset(label) when is_binary(label),
     do: changeset(%{label: label})
@@ -88,9 +88,9 @@ defmodule Dymo.Tag do
     sanitized_params = attrs |> Map.put(:ns, ns)
 
     %@me{}
-    |> Changeset.cast(sanitized_params, [:ns, :label])
-    |> Changeset.validate_required([:ns, :label])
-    |> Changeset.unique_constraint(:label, name: :tags_unicity)
+    |> cast(sanitized_params, [:ns, :label, :assignable])
+    |> validate_required([:ns, :label])
+    |> unique_constraint(:label, name: :tags_unicity)
   end
 
   # Called with just a %{label: label}.
@@ -100,15 +100,15 @@ defmodule Dymo.Tag do
   @doc """
   Casts attributes into a `Tag` struct.
   """
-  @spec cast(label_or_labels | t() | Changeset.t()) :: t
-  def cast(%@me{} = struct),
+  @spec to_struct(label_or_labels | t() | Changeset.t()) :: t
+  def to_struct(%@me{} = struct),
     do: struct
 
-  def cast(stuff) do
+  def to_struct(stuff) do
     stuff
     |> changeset()
     |> case do
-      %{valid?: true} = cs -> Changeset.apply_changes(cs)
+      %{valid?: true} = cs -> cs |> apply_changes()
       _ -> raise "Parametters cannot be cast into a tag: #{inspect(stuff)}"
     end
   end
@@ -152,7 +152,7 @@ defmodule Dymo.Tag do
       |> Dymo.repo().insert!(
         on_conflict: {:replace, [:updated_at]},
         conflict_target: [:ns, :label],
-        returning: false
+        returning: [:ns, :label, :assignable]
       )
 
   @doc """
@@ -188,6 +188,6 @@ defmodule Dymo.Tag do
   def find_existing({ns, label}),
     do:
       @me
-      |> where([t], t.ns == ^ns and t.label == ^label)
+      |> where([t], t.assignable and t.ns == ^ns and t.label == ^label)
       |> Dymo.repo().one()
 end

@@ -129,6 +129,19 @@ You can override this behaviour by doing the following in your `config` files:
 config :dymo, create_missing_tags_by_default: true
 ```
 
+## Unassignable Labels
+
+Sometimes, tags might be present in a database but it should be forbidden for some of them to become
+assigned to a taggable. For example, if some of the tags are stored for the sole purpose of structure, if
+they represent a parent tag that should never be attached itself, etc.
+
+Dymo handles these cases by exposing an attribute on the `Tag` model named `assignable`. Tags can be attached
+to taggables as long as their `attachable`attribute is set to true - otherwise they will just be dropped from
+tagging operations.
+
+Note that operations such as `set_labels` or `add_labels` won't raise or error when unassignable tags are
+given. Instead, they will just ignore these tags completely.
+
 ### Querying Labels
 
 To get the labels associated with a given post, you have several options.
