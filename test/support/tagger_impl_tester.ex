@@ -240,7 +240,7 @@ defmodule Dymo.TaggerImplTester do
       defp create_unassignable_labels(_) do
         for label <- @unassignable do
           %{ns: :ns1, label: label, assignable: false}
-          |> Tag.changeset()
+          |> Tag.create_changeset()
           |> Repo.insert!()
         end
       end

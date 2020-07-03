@@ -52,7 +52,7 @@ defmodule Dymo.TaggerImpl do
       ...>   %Dymo.Post{title: "Hey"}
       ...>     |> Dymo.repo().insert!
       iex> %{ns: :special, label: "nope", assignable: false}
-      ...>   |> Dymo.Tag.changeset()
+      ...>   |> Dymo.Tag.create_changeset()
       ...>   |> Dymo.repo().insert!
       iex> post
       ...>   |> TaggerImpl.set_labels([{:rank, "one"}, {:rank, "two"}, {:special, "nope"}], create_missing: true)

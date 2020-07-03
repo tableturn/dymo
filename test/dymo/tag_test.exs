@@ -7,50 +7,50 @@ defmodule Dymo.TagTest do
 
   setup :fixtures
 
-  describe ".changeset/1" do
+  describe ".changeset/2 via create_changeset/1" do
     test "casts a string directly", %{label: label} do
-      cs = label |> Tag.changeset()
+      cs = label |> Tag.create_changeset()
       assert label == Changeset.get_field(cs, :label)
       assert :root == Changeset.get_field(cs, :ns)
     end
 
     test "casts label tupples directly", %{ns: ns, label: label} do
-      cs = {ns, label} |> Tag.changeset()
+      cs = {ns, label} |> Tag.create_changeset()
       assert label == Changeset.get_field(cs, :label)
       assert ns == Changeset.get_field(cs, :ns)
     end
 
     test "casts maps as attributes", %{ns: ns, label: label} do
-      cs = %{ns: ns, label: label} |> Tag.changeset()
+      cs = %{ns: ns, label: label} |> Tag.create_changeset()
       assert label == Changeset.get_field(cs, :label)
       assert ns == Changeset.get_field(cs, :ns)
     end
 
     test "handles string namespaces", %{ns: ns, label: label} do
-      cs = {"#{ns}", label} |> Tag.changeset()
+      cs = {"#{ns}", label} |> Tag.create_changeset()
       assert ns == Changeset.get_field(cs, :ns)
     end
 
     test "handles nil namespaces", %{label: label} do
-      cs = {nil, label} |> Tag.changeset()
+      cs = {nil, label} |> Tag.create_changeset()
       assert cs.valid?
       assert :root == Changeset.get_field(cs, :ns)
     end
 
     test "enforces label unicity constraints", %{label: label} do
-      %{label: label} |> Tag.changeset() |> Repo.insert!()
+      %{label: label} |> Tag.create_changeset() |> Repo.insert!()
 
       {:error, %{valid?: valid, errors: errors}} =
-        %{label: label} |> Tag.changeset() |> Repo.insert()
+        %{label: label} |> Tag.create_changeset() |> Repo.insert()
 
       refute valid
       assert match?({"has already been taken", _}, errors[:label])
     end
 
     test "enforces label unicity constraints within namespaces", %{ns: ns, label: label} do
-      %{label: label} |> Tag.changeset() |> Repo.insert!()
-      ret1 = %{ns: ns, label: label} |> Tag.changeset() |> Repo.insert()
-      ret2 = %{ns: ns, label: label} |> Tag.changeset() |> Repo.insert()
+      %{label: label} |> Tag.create_changeset() |> Repo.insert!()
+      ret1 = %{ns: ns, label: label} |> Tag.create_changeset() |> Repo.insert()
+      ret2 = %{ns: ns, label: label} |> Tag.create_changeset() |> Repo.insert()
       assert match?({:ok, %Tag{label: ^label, ns: _}}, ret1)
 
       assert match?(
@@ -61,9 +61,10 @@ defmodule Dymo.TagTest do
     end
 
     test "doesn't mix namespaces while checking for unicity constraints", %{label: label} do
-      %{label: label} |> Tag.changeset() |> Repo.insert!()
-      {:ok, %{id: id1}} = %{ns: :foo, label: label} |> Tag.changeset() |> Repo.insert()
-      {:ok, %{id: id2}} = %{ns: :bar, label: label} |> Tag.changeset() |> Repo.insert()
+      %{label: label} |> Tag.create_changeset() |> Repo.insert!()
+      {:ok, %{id: id1}} = %{ns: :foo, label: label} |> Tag.create_changeset() |> Repo.insert()
+      {:ok, %{id: id2}} = %{ns: :bar, label: label} |> Tag.create_changeset() |> Repo.insert()
+
       assert id1 != id2
     end
   end
