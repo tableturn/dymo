@@ -352,7 +352,7 @@ defmodule Dymo.EndToEndTest do
       %{ns: :b, label: "nb1", assignable: false},
       %{ns: :b, label: "nb2", assignable: false}
     ]
-    |> Enum.each(&(&1 |> Tag.changeset() |> Repo.insert!()))
+    |> Enum.each(&(&1 |> Tag.create_changeset() |> Repo.insert!()))
 
     :ok
   end

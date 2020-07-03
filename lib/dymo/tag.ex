@@ -43,59 +43,54 @@ defmodule Dymo.Tag do
   ## Examples
 
       iex> "blue"
-      ...>   |> changeset()
+      ...>   |> create_changeset()
       ...>   |> Changeset.apply_changes()
       ...>   |> Map.take([:ns, :label])
       %{ns: Ns.root_namespace(), label: "blue"}
 
       iex> {:paint, "blue"}
-      ...>   |> changeset()
+      ...>   |> create_changeset()
       ...>   |> Changeset.apply_changes()
       ...>   |> Map.take([:ns, :label])
       %{ns: :paint, label: "blue"}
 
       iex> {"car", "blue"}
-      ...>   |> changeset()
+      ...>   |> create_changeset()
       ...>   |> Changeset.apply_changes()
       ...>   |> Map.take([:ns, :label])
       %{ns: :car, label: "blue"}
 
       iex> %{ns: :car, label: "blue"}
-      ...>   |> changeset()
+      ...>   |> create_changeset()
       ...>   |> Changeset.apply_changes()
       ...>   |> Map.take([:ns, :label])
       %{ns: :car, label: "blue"}
 
       iex> {"non existent", "blue"}
-      ...>   |> changeset()
+      ...>   |> create_changeset()
       ...>   |> Map.take([:valid?])
       %{valid?: false}
   """
-  @spec changeset(label | creation_attrs()) :: Changeset.t()
+  @spec changeset(struct | t, creation_attrs()) :: Changeset.t()
+  def changeset(struct, attrs) when is_map(attrs),
+    do:
+      struct
+      |> cast(attrs, [:ns, :label, :assignable])
+      |> validate_required([:label])
+      |> put_default_namespace()
+      |> unique_constraint(:label, name: :tags_unicity)
+
   # Called for a given string label.
-  def changeset(label) when is_binary(label),
-    do: changeset(%{label: label})
+  def create_changeset(label) when is_binary(label),
+    do: %@me{} |> changeset(%{label: label})
 
   # Called for a given namespace and label.
-  def changeset({ns, label}) when is_binary(label),
-    do: changeset(%{ns: ns, label: label})
-
-  # Called with a proper %{ns: ns, label: label}.
-  def changeset(attrs) when is_map(attrs) do
-    # We sanitize params by forcing a value into the namespace in
-    # case it's nil or not existent.
-    ns = Map.get(attrs, :ns) || Ns.root_namespace()
-    sanitized_params = attrs |> Map.put(:ns, ns)
-
-    %@me{}
-    |> cast(sanitized_params, [:ns, :label, :assignable])
-    |> validate_required([:ns, :label])
-    |> unique_constraint(:label, name: :tags_unicity)
-  end
+  def create_changeset({ns, label}) when is_binary(label),
+    do: %@me{} |> changeset(%{ns: ns, label: label})
 
   # Called with just a %{label: label}.
-  def changeset(%{label: label}),
-    do: changeset(%{ns: Ns.root_namespace(), label: label})
+  def create_changeset(attrs) when is_map(attrs),
+    do: %@me{} |> changeset(attrs)
 
   @doc """
   Casts attributes into a `Tag` struct.
@@ -106,7 +101,7 @@ defmodule Dymo.Tag do
 
   def to_struct(stuff) do
     stuff
-    |> changeset()
+    |> create_changeset()
     |> case do
       %{valid?: true} = cs -> cs |> apply_changes()
       _ -> raise "Parametters cannot be cast into a tag: #{inspect(stuff)}"
@@ -148,7 +143,7 @@ defmodule Dymo.Tag do
   def find_or_create!({_, _} = label),
     do:
       label
-      |> changeset()
+      |> create_changeset()
       |> Dymo.repo().insert!(
         on_conflict: {:replace, [:updated_at]},
         conflict_target: [:ns, :label],
@@ -190,4 +185,9 @@ defmodule Dymo.Tag do
       @me
       |> where([t], t.assignable and t.ns == ^ns and t.label == ^label)
       |> Dymo.repo().one()
+
+  ## Private.
+
+  defp put_default_namespace(cs),
+    do: cs |> put_change(:ns, cs |> get_field(:ns) || Ns.root_namespace())
 end
