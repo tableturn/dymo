@@ -170,7 +170,7 @@ defmodule Dymo.Tag do
       ...> {id1a, nil} == {id1b, other}
       true
   """
-  @spec find_existing(label_or_labels | t | [t]) :: label_or_labels
+  @spec find_existing(label_or_labels | t | [t]) :: label_or_labels | nil
   def find_existing(tags) when is_list(tags),
     do:
       tags
