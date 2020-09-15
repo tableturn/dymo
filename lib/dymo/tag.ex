@@ -82,7 +82,7 @@ defmodule Dymo.Tag do
       |> cast(attrs, [:ns, :label, :assignable])
       |> validate_required([:label])
       |> put_default_namespace()
-      |> unique_constraint(:label, name: :tags_unicity)
+      |> unique_constraint(:label, name: :tags_uniqueness)
 
   # Called for a given string label.
   def create_changeset(label) when is_binary(label),

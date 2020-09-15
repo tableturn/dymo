@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Dymo.JoinTable do
     defmodule Repo.Migrations.Create#{plural}Tags do
       use Ecto.Migration
 
-      @unicity_fields ~w(tag_id #{key})a
+      @unique_fields ~w(tag_id #{key})a
       @taggings_constraint "num_nonnulls(#{key}) = 1"
 
       def change do
@@ -54,8 +54,8 @@ defmodule Mix.Tasks.Dymo.JoinTable do
         # Each taggable model should be indexed as well.
         create index(:#{table}, [:#{singular_downcase}_id])
 
-        # A single entity can only be tagged once with a given tag, enforce unicity with this index.
-        create index(:#{table}, @unicity_fields, unique: true, name: :#{table}_unicity)
+        # A single entity can only be tagged once with a given tag, enforce uniqueness with this index.
+        create index(:#{table}, @unique_fields, unique: true, name: :#{table}_tags_uniqueness)
         # This constraint ensures that only one column is set on any given tagging.
         create constraint(:#{table}, :must_reference_one, check: @taggings_constraint)
       end
