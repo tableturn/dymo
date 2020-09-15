@@ -54,7 +54,7 @@ defmodule Dymo.Taggable do
       alias Dymo.Tag
 
       defimpl Dymo.Taggable.Protocol do
-        @spec labels(Dymo.Taggable.t(), keyword) :: Query.t()
+        @spec tags(Dymo.Taggable.t(), keyword) :: Query.t()
         def tags(taggable, opts \\ []),
           do: unquote(impl).tags(taggable, unquote(join_table), unquote(join_key), opts)
 
