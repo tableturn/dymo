@@ -30,6 +30,9 @@ defmodule Dymo.Tag do
         }
 
   schema "tags" do
+    # Associations.
+    belongs_to :parent, __MODULE__
+    has_many :children, __MODULE__
     # Regular fields.
     field :ns, Ns, default: Ns.root_namespace()
     field :label, :string

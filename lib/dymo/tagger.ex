@@ -13,6 +13,8 @@ defmodule Dymo.Tagger do
   @typedoc "A join key is an atom."
   @type join_key :: atom
 
+  @doc "See `Dymo.TaggerImpl.tags/{3,4}`."
+  @callback tags(Schema.t(), join_table, join_key) :: Query.t()
   @doc "See `Dymo.TaggerImpl.labels/{3,4}`."
   @callback labels(Schema.t(), join_table, join_key) :: Query.t()
   @doc "See `Dymo.TaggerImpl.labels/{3,4}`."

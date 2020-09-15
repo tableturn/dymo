@@ -2,6 +2,9 @@ defprotocol Dymo.Taggable.Protocol do
   alias Ecto.Query
   alias Dymo.Tag
 
+  @spec tags(t(), keyword) :: Query.t()
+  def tags(taggable, opts \\ [])
+
   @spec labels(t(), keyword) :: Query.t()
   def labels(taggable, opts \\ [])
 

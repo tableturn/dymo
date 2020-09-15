@@ -14,13 +14,9 @@ defmodule Dymo.TaggerImpl do
   @type join_table :: Tagger.join_table()
   @type join_key :: Tagger.join_key()
 
-  @doc """
-  Generates query for retrieving labels associated with a schema's
-  instance.
-  """
   @impl Tagger
-  @spec labels(Taggable.t(), join_table, join_key, keyword) :: Query.t()
-  def labels(%{__struct__: schema, tags: _} = struct, jt, jk, opts \\ [])
+  @spec tags(Taggable.t(), join_table, join_key, keyword) :: Query.t()
+  def tags(%{__struct__: schema, tags: _} = struct, jt, jk, opts \\ [])
       when is_binary(jt) and is_atom(jk) do
     cast_ns =
       opts
@@ -31,8 +27,20 @@ defmodule Dymo.TaggerImpl do
     |> join_taggings(pkey_type(schema), struct, jt, jk)
     |> where([t], t.ns == ^cast_ns)
     |> distinct([t, tg], t.label)
-    |> select([t, tg], t.label)
   end
+
+  @doc """
+  Generates query for retrieving labels associated with a schema's
+  instance.
+  """
+  @impl Tagger
+  @spec labels(Taggable.t(), join_table, join_key, keyword) :: Query.t()
+  def labels(%{__struct__: _, tags: _} = struct, jt, jk, opts \\ [])
+      when is_binary(jt) and is_atom(jk),
+      do:
+        struct
+        |> tags(jt, jk, opts)
+        |> select([t, tg], t.label)
 
   @doc """
   Sets the labels associated with an instance of a model, for the
