@@ -32,7 +32,7 @@ defmodule Mix.Tasks.Dymo.Install do
         create index(:tags, [:description])
         create index(:tags, [:assignable])
 
-        create index(:tags, [:ns, :label], unique: true, name: :tags_uniqueness)
+        create unique_index(:tags, [:ns, :label], name: :tags_uniqueness)
       end
     end
     """)

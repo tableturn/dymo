@@ -20,7 +20,7 @@ defmodule Dymo.Repo.Migrations.CreateTaggings do
     create index(:taggings, [:uu_post_id])
 
     # A single entity can only be tagged once with a given tag, enforce uniqueness with this index.
-    create index(:taggings, @unique_fields, unique: true, name: :taggings_uniqueness)
+    create unique_index(:taggings, @unique_fields, name: :taggings_uniqueness)
     # This constraint ensures that only one column is set on any given tagging.
     create constraint(:taggings, :must_reference_one, check: @taggings_constraint)
   end

@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Dymo.JoinTable do
         create index(:#{table}, [:#{singular_downcase}_id])
 
         # A single entity can only be tagged once with a given tag, enforce uniqueness with this index.
-        create index(:#{table}, @unique_fields, unique: true, name: :#{table}_tags_uniqueness)
+        create unique_index(:#{table}, @unique_fields, name: :#{table}_tags_uniqueness)
         # This constraint ensures that only one column is set on any given tagging.
         create constraint(:#{table}, :must_reference_one, check: @taggings_constraint)
       end
