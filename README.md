@@ -71,7 +71,7 @@ You might want to add the following relationship to your MyApp.Post schema:
                 on_replace: :delete,
                 unique: true
 
-Alternativelly, you can simply use the `tags()` macro in your schema declaration,
+Alternativelly, you can simply use the `taggable()` macro in your schema declaration,
 as long as you `use Dymo.Taggable` at the top of your module.
 ```
 

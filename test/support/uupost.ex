@@ -10,7 +10,7 @@ defmodule Dymo.UUPost do
   @type t :: %__MODULE__{}
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "uuposts" do
-    tags()
+    taggable()
     field :title, :string
     field :body, :string
     timestamps()

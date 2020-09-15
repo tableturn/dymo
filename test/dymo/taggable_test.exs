@@ -5,6 +5,7 @@ defmodule Dymo.TaggableTest do
   defmodule TestTagger do
     @behaviour Tagger
 
+    def tags(s, jt, jk, opts \\ []), do: {s, jt, jk, opts}
     def labels(s, jt, jk, opts \\ []), do: {s, jt, jk, opts}
     def set_labels(s, lls, opts \\ []), do: {s, lls, opts}
     def add_labels(s, lls, opts \\ []), do: {s, lls, opts}
@@ -18,7 +19,7 @@ defmodule Dymo.TaggableTest do
     use Taggable, implementation: TestTagger
 
     schema "dummies" do
-      tags()
+      taggable()
     end
   end
 
@@ -45,6 +46,14 @@ defmodule Dymo.TaggableTest do
     @opts [foo: :baz]
 
     setup :taggable
+
+    test ".tags/{3,4}", %{taggable: taggable} do
+      assert {taggable, @join_table, @join_id, @no_opts} ==
+               taggable |> Taggable.tags()
+
+      assert {taggable, @join_table, @join_id, @opts} ==
+               taggable |> Taggable.tags(@opts)
+    end
 
     test ".labels/{3,4}", %{taggable: taggable} do
       assert {taggable, @join_table, @join_id, @no_opts} ==

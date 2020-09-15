@@ -55,6 +55,10 @@ defmodule Dymo.Taggable do
 
       defimpl Dymo.Taggable.Protocol do
         @spec labels(Dymo.Taggable.t(), keyword) :: Query.t()
+        def tags(taggable, opts \\ []),
+          do: unquote(impl).tags(taggable, unquote(join_table), unquote(join_key), opts)
+
+        @spec labels(Dymo.Taggable.t(), keyword) :: Query.t()
         def labels(taggable, opts \\ []),
           do: unquote(impl).labels(taggable, unquote(join_table), unquote(join_key), opts)
 
@@ -94,7 +98,7 @@ defmodule Dymo.Taggable do
   end
 
   @doc "Use this macro in your Ecto schema to add `tags` field."
-  defmacro tags do
+  defmacro taggable() do
     taggings =
       __CALLER__.module
       |> Module.get_attribute(:join_table)
@@ -110,6 +114,10 @@ defmodule Dymo.Taggable do
         unique: true
     end
   end
+
+  @doc "Returns all labels in the given namespace."
+  @spec tags(t(), keyword) :: Query.t()
+  defdelegate tags(taggable, opts \\ []), to: Protocol
 
   @doc "Returns all labels in the given namespace."
   @spec labels(t(), keyword) :: Query.t()

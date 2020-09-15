@@ -9,7 +9,7 @@ defmodule Dymo.Post do
 
   @type t :: %__MODULE__{}
   schema "posts" do
-    tags()
+    taggable()
     field :title, :string
     field :body, :string
     timestamps()
