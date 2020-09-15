@@ -36,6 +36,7 @@ defmodule Dymo.Tag do
     # Regular fields.
     field :ns, Ns, default: Ns.root_namespace()
     field :label, :string
+    field :description, :string
     field :assignable, :boolean, default: true
     timestamps()
   end
