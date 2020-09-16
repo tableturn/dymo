@@ -14,19 +14,22 @@ defmodule Dymo.TaggerImpl do
   @type join_table :: Tagger.join_table()
   @type join_key :: Tagger.join_key()
 
+  # TODO: Add tests when no namespace is passed.
   @impl Tagger
   @spec tags(Taggable.t(), join_table, join_key, keyword) :: Query.t()
   def tags(%{__struct__: schema, tags: _} = struct, jt, jk, opts \\ [])
       when is_binary(jt) and is_atom(jk) do
-    cast_ns =
-      opts
-      |> Keyword.get(:ns, nil)
-      |> Ns.cast!()
+    base =
+      Tag
+      |> join_taggings(pkey_type(schema), struct, jt, jk)
+      |> distinct([t, tg], t.label)
 
-    Tag
-    |> join_taggings(pkey_type(schema), struct, jt, jk)
-    |> where([t], t.ns == ^cast_ns)
-    |> distinct([t, tg], t.label)
+    opts
+    |> Keyword.get(:ns)
+    |> case do
+      nil -> base
+      ns -> base |> where([t], t.ns == ^Ns.cast!(ns))
+    end
   end
 
   @doc """
