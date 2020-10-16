@@ -17,7 +17,7 @@ defmodule Dymo.EndToEndTest do
         ])
 
       # Assert on p1.
-      assert ["r1"] == p1 |> labels()
+      assert ["a1", "b1", "b2", "r1"] == p1 |> labels()
       assert ["r1"] == p1 |> labels(ns: :root)
       assert ["a1"] == p1 |> labels(ns: :a)
       assert ["b1", "b2"] == p1 |> labels(ns: :b)
@@ -25,7 +25,7 @@ defmodule Dymo.EndToEndTest do
       assert [] == p1 |> labels(ns: :d)
       assert [] == p1 |> labels(ns: :e)
       # Assert on p2.
-      assert ["r3"] == p2 |> labels()
+      assert ["a1", "b1", "d1", "r3"] == p2 |> labels()
       assert ["r3"] == p2 |> labels(ns: :root)
       assert ["a1"] == p2 |> labels(ns: :a)
       assert ["b1"] == p2 |> labels(ns: :b)
@@ -33,7 +33,7 @@ defmodule Dymo.EndToEndTest do
       assert ["d1"] == p2 |> labels(ns: :d)
       assert [] == p2 |> labels(ns: :e)
       # Assert on p3.
-      assert [] == p3 |> labels()
+      assert ["e1", "e2", "e3"] == p3 |> labels()
       assert [] == p3 |> labels(ns: :root)
       assert [] == p3 |> labels(ns: :a)
       assert [] == p3 |> labels(ns: :b)
@@ -59,7 +59,7 @@ defmodule Dymo.EndToEndTest do
       p3 |> Taggable.set_labels([{:e, "e4"}, {:e, "e5"}, {:e, "e6"}], create_missing: true)
 
       # Assert on p1.
-      assert ["r1"] == p1 |> labels()
+      assert ["a1", "a2", "b1", "b2", "r1"] == p1 |> labels()
       assert ["r1"] == p1 |> labels(ns: :root)
       assert ["a1", "a2"] == p1 |> labels(ns: :a)
       assert ["b1", "b2"] == p1 |> labels(ns: :b)
@@ -67,7 +67,7 @@ defmodule Dymo.EndToEndTest do
       assert [] == p1 |> labels(ns: :d)
       assert [] == p1 |> labels(ns: :e)
       # Assert on p2.
-      assert ["r3"] == p2 |> labels()
+      assert ["a1", "b1", "d1", "r3"] == p2 |> labels()
       assert ["r3"] == p2 |> labels(ns: :root)
       assert ["a1"] == p2 |> labels(ns: :a)
       assert ["b1"] == p2 |> labels(ns: :b)
@@ -75,7 +75,7 @@ defmodule Dymo.EndToEndTest do
       assert ["d1"] == p2 |> labels(ns: :d)
       assert [] == p2 |> labels(ns: :e)
       # Assert on p3.
-      assert [] == p3 |> labels()
+      assert ["e4", "e5", "e6"] == p3 |> labels()
       assert [] == p3 |> labels(ns: :root)
       assert [] == p3 |> labels(ns: :a)
       assert [] == p3 |> labels(ns: :b)
@@ -104,7 +104,7 @@ defmodule Dymo.EndToEndTest do
       assert [] == p1 |> labels(ns: :d)
       assert [] == p1 |> labels(ns: :e)
       # Assert on p2.
-      assert ["r3"] == p2 |> labels()
+      assert ["a1", "b1", "d1", "r3"] == p2 |> labels()
       assert ["r3"] == p2 |> labels(ns: :root)
       assert ["a1"] == p2 |> labels(ns: :a)
       assert ["b1"] == p2 |> labels(ns: :b)
@@ -112,7 +112,7 @@ defmodule Dymo.EndToEndTest do
       assert ["d1"] == p2 |> labels(ns: :d)
       assert [] == p2 |> labels(ns: :e)
       # Assert on p3.
-      assert [] == p3 |> labels()
+      assert ["e1", "e3"] == p3 |> labels()
       assert [] == p3 |> labels(ns: :root)
       assert [] == p3 |> labels(ns: :a)
       assert [] == p3 |> labels(ns: :b)
@@ -139,7 +139,7 @@ defmodule Dymo.EndToEndTest do
       p2 |> Taggable.add_labels([{:d, "d2"}, {:d, "d3"}], create_missing: true)
 
       # Assert on p1.
-      assert ["r1", "r2"] == p1 |> labels()
+      assert ["a1", "a2", "a3", "b1", "b2", "b3", "b4", "c1", "r1", "r2"] == p1 |> labels()
       assert ["r1", "r2"] == p1 |> labels(ns: :root)
       assert ["a1", "a2", "a3"] == p1 |> labels(ns: :a)
       assert ["b1", "b2", "b3", "b4"] == p1 |> labels(ns: :b)
@@ -147,7 +147,7 @@ defmodule Dymo.EndToEndTest do
       assert [] == p1 |> labels(ns: :d)
       assert [] == p1 |> labels(ns: :e)
       # Assert on p2.
-      assert ["r3"] == p2 |> labels()
+      assert ["a1", "b1", "d1", "d2", "d3", "r3"] == p2 |> labels()
       assert ["r3"] == p2 |> labels(ns: :root)
       assert ["a1"] == p2 |> labels(ns: :a)
       assert ["b1"] == p2 |> labels(ns: :b)
@@ -155,7 +155,7 @@ defmodule Dymo.EndToEndTest do
       assert ["d1", "d2", "d3"] == p2 |> labels(ns: :d)
       assert [] == p2 |> labels(ns: :e)
       # Assert on p3.
-      assert [] == p3 |> labels()
+      assert ["e4", "e5", "e6"] == p3 |> labels()
       assert [] == p3 |> labels(ns: :root)
       assert [] == p3 |> labels(ns: :a)
       assert [] == p3 |> labels(ns: :b)
@@ -179,7 +179,7 @@ defmodule Dymo.EndToEndTest do
       p2 |> Taggable.add_labels([{:d, "d2"}, {:d, "d3"}])
 
       # Assert on p1.
-      assert ["r1"] == p1 |> labels()
+      assert ["a1", "a2", "b1", "b2", "r1"] == p1 |> labels()
       assert ["r1"] == p1 |> labels(ns: :root)
       assert ["a1", "a2"] == p1 |> labels(ns: :a)
       assert ["b1", "b2"] == p1 |> labels(ns: :b)
@@ -187,7 +187,7 @@ defmodule Dymo.EndToEndTest do
       assert [] == p1 |> labels(ns: :d)
       assert [] == p1 |> labels(ns: :e)
       # Assert on p2.
-      assert ["r3"] == p2 |> labels()
+      assert ["a1", "b1", "d1", "r3"] == p2 |> labels()
       assert ["r3"] == p2 |> labels(ns: :root)
       assert ["a1"] == p2 |> labels(ns: :a)
       assert ["b1"] == p2 |> labels(ns: :b)
@@ -195,7 +195,7 @@ defmodule Dymo.EndToEndTest do
       assert ["d1"] == p2 |> labels(ns: :d)
       assert [] == p2 |> labels(ns: :e)
       # Assert on p3.
-      assert [] == p3 |> labels()
+      assert ["e4", "e5", "e6"] == p3 |> labels()
       assert [] == p3 |> labels(ns: :root)
       assert [] == p3 |> labels(ns: :a)
       assert [] == p3 |> labels(ns: :b)
@@ -218,7 +218,7 @@ defmodule Dymo.EndToEndTest do
       |> Taggable.remove_labels("a2", ns: :c)
 
       # Assert on p1.
-      assert ["r1", "r2"] == p1 |> labels()
+      assert ["a1", "a2", "a3", "b1", "b3", "c1", "r1", "r2"] == p1 |> labels()
       assert ["r1", "r2"] == p1 |> labels(ns: :root)
       assert ["a1", "a2", "a3"] == p1 |> labels(ns: :a)
       assert ["b1", "b3"] == p1 |> labels(ns: :b)
@@ -226,7 +226,7 @@ defmodule Dymo.EndToEndTest do
       assert [] == p1 |> labels(ns: :d)
       assert [] == p1 |> labels(ns: :e)
       # Assert on p2.
-      assert ["r3"] == p2 |> labels()
+      assert ["a1", "b1", "d1", "d2", "d3", "r3"] == p2 |> labels()
       assert ["r3"] == p2 |> labels(ns: :root)
       assert ["a1"] == p2 |> labels(ns: :a)
       assert ["b1"] == p2 |> labels(ns: :b)
@@ -234,7 +234,7 @@ defmodule Dymo.EndToEndTest do
       assert ["d1", "d2", "d3"] == p2 |> labels(ns: :d)
       assert [] == p2 |> labels(ns: :e)
       # Assert on p3.
-      assert [] == p3 |> labels()
+      assert ["e4", "e5", "e6"] == p3 |> labels()
       assert [] == p3 |> labels(ns: :root)
       assert [] == p3 |> labels(ns: :a)
       assert [] == p3 |> labels(ns: :b)
@@ -262,7 +262,7 @@ defmodule Dymo.EndToEndTest do
 
       p2 |> Taggable.remove_labels("d2", ns: :d)
       # Assert on p1.
-      assert ["r2"] == p1 |> labels()
+      assert ["a1", "a3", "b3", "c1", "r2"] == p1 |> labels()
       assert ["r2"] == p1 |> labels(ns: :root)
       assert ["a1", "a3"] == p1 |> labels(ns: :a)
       assert ["b3"] == p1 |> labels(ns: :b)
@@ -270,14 +270,14 @@ defmodule Dymo.EndToEndTest do
       assert [] == p1 |> labels(ns: :d)
       assert [] == p1 |> labels(ns: :e)
       # Assert on p2.
-      assert ["r3"] == p2 |> labels()
+      assert ["b1", "d1", "r3"] == p2 |> labels()
       assert ["r3"] == p2 |> labels(ns: :root)
       assert [] == p2 |> labels(ns: :a)
       assert ["b1"] == p2 |> labels(ns: :b)
       assert ["d1"] == p2 |> labels(ns: :d)
       assert [] == p2 |> labels(ns: :e)
       # Assert on p3.
-      assert [] == p3 |> labels()
+      assert ["e4", "e5", "e6"] == p3 |> labels()
       assert [] == p3 |> labels(ns: :root)
       assert [] == p3 |> labels(ns: :a)
       assert [] == p3 |> labels(ns: :b)

@@ -16,12 +16,12 @@ defmodule Dymo.TaggerImplTester do
       @primary_key unquote(primary_key)
       @join_table unquote(join_table)
 
-      @labels1 ~w(t11 t12 t13)
-      @labels2 ~w(t21 t22 t23)
-      @labels3 ~w(t31 t32 t33)
-      @labels4 ~w(t41 t42 t43)
-      @unassignable ~w(tna11 tna12)
-      @nonexistent ~w(tn1 tn2 tn3)
+      @labels1 ["t11", "t12", "t13"]
+      @labels2 ["t21", "t22", "t23"]
+      @labels3 ["t31", "t32", "t33"]
+      @labels4 ["t41", "t42", "t43"]
+      @unassignable ["tna11", "tna12"]
+      @nonexistent ["tn1", "tn2", "tn3"]
 
       setup :taggables
 
@@ -45,7 +45,7 @@ defmodule Dymo.TaggerImplTester do
 
         test "overwrites existing labels with the same namespace", %{posts: [p1 | _]} do
           p1 |> TaggerImpl.set_labels(@labels4, ns: :ns1, create_missing: true)
-          assert @labels1 == p1 |> taggable_labels()
+          assert @labels1 ++ @labels4 == p1 |> taggable_labels()
           assert @labels4 == p1 |> taggable_labels(ns: :ns1)
         end
 
@@ -69,6 +69,7 @@ defmodule Dymo.TaggerImplTester do
             create_missing: true
           )
 
+          assert @labels1 ++ @labels2 == p1 |> taggable_labels()
           assert @labels1 == p1 |> taggable_labels(ns: :ns1)
           assert @labels2 == p1 |> taggable_labels(ns: :ns2)
         end
@@ -165,9 +166,11 @@ defmodule Dymo.TaggerImplTester do
           |> TaggerImpl.remove_labels("t12")
           |> TaggerImpl.remove_labels(["t22", {:ns4, "t42"}], ns: :ns2)
 
-          assert @labels1 -- ["t12"] == p1 |> taggable_labels()
+          assert (@labels1 ++ @labels4) -- ["t12", "t42"] == p1 |> taggable_labels()
+          assert @labels1 -- ["t12"] == p1 |> taggable_labels(ns: :root)
           assert @labels4 -- ["t42"] == p1 |> taggable_labels(ns: :ns4)
-          assert @labels2 == p2 |> taggable_labels()
+          assert (@labels2 ++ @labels4) -- ["t42"] == p2 |> taggable_labels()
+          assert @labels2 == p2 |> taggable_labels(ns: :root)
           assert @labels2 -- ["t22"] == p2 |> taggable_labels(ns: :ns2)
           assert @labels4 -- ["t42"] == p2 |> taggable_labels(ns: :ns4)
         end
