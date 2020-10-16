@@ -20,15 +20,16 @@ defmodule Dymo.TaggerImpl do
   def tags(%{__struct__: schema, tags: _} = struct, jt, jk, opts \\ [])
       when is_binary(jt) and is_atom(jk) do
     base =
-      Tag
+      from(t in Tag, as: :tags)
       |> join_taggings(pkey_type(schema), struct, jt, jk)
-      |> distinct([t, tg], t.label)
+      |> distinct([tags: t, taggings: tg], t.label)
+      |> order_by([tags: t], asc: [t.ns, t.label])
 
     opts
     |> Keyword.get(:ns)
     |> case do
       nil -> base
-      ns -> base |> where([t], t.ns == ^Ns.cast!(ns))
+      ns -> base |> where([tags: t], t.ns == ^Ns.cast!(ns))
     end
   end
 
@@ -43,7 +44,7 @@ defmodule Dymo.TaggerImpl do
       do:
         struct
         |> tags(jt, jk, opts)
-        |> select([t, tg], t.label)
+        |> select([tags: t, taggings: tg], t.label)
 
   @doc """
   Sets the labels associated with an instance of a model, for the
@@ -198,11 +199,12 @@ defmodule Dymo.TaggerImpl do
       |> Keyword.get(:ns)
       |> Ns.cast!()
 
-    Tag
-    |> join(:left, [t], tg in ^jt, on: t.id == tg.tag_id)
-    |> distinct([t, tg], tg.tag_id)
-    |> where([t, tg], t.ns == ^cast_ns and not is_nil(field(tg, ^jk)))
-    |> select([t, tg], t.label)
+    from(t in Tag, as: :tags)
+    |> join(:left, [tags: t], tg in ^jt, as: :taggings, on: t.id == tg.tag_id)
+    |> distinct([tags: t, taggings: tg], tg.tag_id)
+    |> where([tags: t, taggings: tg], t.ns == ^cast_ns and not is_nil(field(tg, ^jk)))
+    |> select([tags: t, taggings: tg], t.label)
+    |> order_by([tags: t], asc: [t.ns, t.label])
   end
 
   @doc """
@@ -253,12 +255,12 @@ defmodule Dymo.TaggerImpl do
     frag =
       labels
       |> Enum.reduce(false, fn {ns, lbl}, acc ->
-        dynamic([m, tg, t], ^acc or (t.ns == ^ns and t.label == ^lbl))
+        dynamic([m, taggings: tg, tags: t], ^acc or (t.ns == ^ns and t.label == ^lbl))
       end)
 
     module
-    |> join(:inner, [m], tg in ^jt, on: m.id == field(tg, ^jk))
-    |> join(:inner, [m, tg], t in Tag, on: t.id == tg.tag_id)
+    |> join(:inner, [m], tg in ^jt, as: :taggings, on: m.id == field(tg, ^jk))
+    |> join(:inner, [m, taggings: tg], t in Tag, as: :tags, on: t.id == tg.tag_id)
     |> where(^frag)
     |> distinct([m, tg, t], m.id)
   end
@@ -275,19 +277,20 @@ defmodule Dymo.TaggerImpl do
 
     # Get all tag IDs matching the specification.
     tag_ids =
-      Tag
+      from(t in Tag, as: :tags)
       |> where(^frag)
-      |> select([t], t.id)
-      |> distinct([t], t.id)
+      |> select([tags: t], t.id)
+      |> distinct([tags: t], t.id)
+      |> order_by([tags: t], asc: [t.ns, t.label])
       |> Dymo.repo().all
 
     # Exact match on *all* tag IDs.
     # This query could be optimized to use a subquery instead of the ^tag_ids array.
     module
-    |> join(:inner, [m], tg in ^jt, on: m.id == field(tg, ^jk))
-    |> where([m, tg], tg.tag_id in ^tag_ids)
-    |> group_by([m, tg], m.id)
-    |> having([m, tg], count(field(tg, ^jk)) == ^length(labels))
+    |> join(:inner, [m], tg in ^jt, as: :taggings, on: m.id == field(tg, ^jk))
+    |> where([m, taggings: tg], tg.tag_id in ^tag_ids)
+    |> group_by([m, taggings: tg], m.id)
+    |> having([m, taggings: tg], count(field(tg, ^jk)) == ^length(labels))
   end
 
   @spec tuppleify(Tag.label() | Tag.t() | [Tag.label() | Tag.t()], Ns.t()) ::
@@ -344,7 +347,8 @@ defmodule Dymo.TaggerImpl do
   defp join_taggings(q, [pk_type], %{id: id}, jt, jk) when pk_type in ~w(id binary_id)a,
     do:
       q
-      |> join(:inner, [t], tg in ^jt,
+      |> join(:inner, [tags: t], tg in ^jt,
+        as: :taggings,
         on: t.assignable and t.id == tg.tag_id and field(tg, ^jk) == type(^id, ^pk_type)
       )
 
